@@ -1,0 +1,45 @@
+# sops-setup.config.yaml — pre-filled for dscv103
+# Notes:
+# - This will generate a machine key at /var/lib/sops-nix/key.txt (root:root, 0600).
+# - If you use impermanence, flip `age.persist.enable` to true and set a persisted path.
+# - You can leave `additional_recipients` empty (host-only decrypt) or add your editor key(s).
+
+repo:
+  root: "."             # Where .sops.yaml is written and secret paths are relative
+
+age:
+  generate: true        # Generate a new age key if key_file is missing
+  private_key_src: ""   # Or point to an existing private key to copy
+
+  key_file: "/var/lib/sops-nix/key.txt"  # Used by NixOS: sops.age.keyFile
+
+  persist:
+    enable: false
+    # If using impermanence, set to a persisted location and set enable: true, e.g.:
+    # path: "/nix/persist/var/lib/sops-nix/key.txt"
+    path: ""
+
+additional_recipients:  # Optional editor/CI recipients (age public keys)
+  # - "age1yourEDITORpublickeygoeshere0000000000000000000000000"
+
+policy:
+  dot_sops_path: ".sops.yaml"
+  path_regexes:
+    - 'secrets(\.ya?ml|\.json|\.env|\.ini|\.bin)?$'
+    - '^home-secrets\.ya?ml$'
+
+bootstrap_secrets:
+  - path: "secrets.yaml"
+    create: true
+    format: "yaml"
+    content: |
+      github:
+        token: "CHANGE_ME"
+      postgres:
+        password: "CHANGE_ME_TOO"
+  - path: "home-secrets.yaml"
+    create: true
+    format: "yaml"
+    content: |
+      imap:
+        password: "SET_ME"

@@ -1,0 +1,352 @@
+// Figma Scripter script: nCino Credit Card Application Dashboard
+// Creates frames, text & color styles, components, auto layout, and chart placeholders.
+// Works best with Inter; falls back to Roboto if Inter isn't available.
+
+async function loadFonts(fonts: {family:string, style:string}[]) {
+  for (const f of fonts) {
+    try { await figma.loadFontAsync(f); } catch { /* ignore, fallback handled */ }
+  }
+}
+function pickFont(...candidates: {family:string, style:string}[]) {
+  // Return the first family we successfully loaded; else last candidate.
+  for (const c of candidates) return c; // Scripter can't introspect loaded state; Inter usually loads.
+}
+
+const INTER_REG   = { family: "Inter",  style: "Regular" };
+const INTER_MED   = { family: "Inter",  style: "Medium"  };
+const INTER_BOLD  = { family: "Inter",  style: "Bold"    };
+const ROBOTO_REG  = { family: "Roboto", style: "Regular" };
+const ROBOTO_MED  = { family: "Roboto", style: "Medium"  };
+const ROBOTO_BOLD = { family: "Roboto", style: "Bold"    };
+
+const TitleFont   = pickFont(INTER_BOLD,  ROBOTO_BOLD);
+const SubFont     = pickFont(INTER_REG,   ROBOTO_REG);
+const MedFont     = pickFont(INTER_MED,   ROBOTO_MED);
+const BodyFont    = pickFont(INTER_REG,   ROBOTO_REG);
+const SmallFont   = pickFont(INTER_REG,   ROBOTO_REG);
+await loadFonts([TitleFont, SubFont, MedFont, BodyFont, SmallFont]);
+
+// --------- Config (edit as needed) ----------
+const CANVAS_WIDTH  = 1280;
+const CANVAS_HEIGHT = 1120;  // set to 720 for compact mode
+const MARGIN = 20;
+const BG = { r:1, g:1, b:1 }; // white
+const COLORS = {
+  ink900: {r:0.066, g:0.066, b:0.066}, // #111111
+  ink700: {r:0.266, g:0.266, b:0.266}, // #444444
+  ink600: {r:0.4,   g:0.4,   b:0.4  }, // #666666
+  ink500: {r:0.333, g:0.333, b:0.333}, // #555555
+  card:   {r:0.973, g:0.973, b:0.973}, // #F8F8F8
+  stroke: {r:0.733, g:0.733, b:0.733}, // #BBBBBB
+};
+const TODAY_STR = "Last refreshed: 11/05/2025"; // update as needed
+
+// --------- Helpers ----------
+function setSolid(node: GeometryMixin, color:{r:number,g:number,b:number}) {
+  node.fills = [{type:'SOLID', color}];
+}
+function setStroke(node: GeometryMixin, color:{r:number,g:number,b:number}, w=1) {
+  (node as any).strokes = [{type:'SOLID', color}];
+  (node as any).strokeWeight = w;
+}
+function text(node: TextNode, str:string, font:{family:string,style:string}, size:number, color:{r:number,g:number,b:number}) {
+  node.fontName = font;
+  node.characters = str;
+  node.fontSize = size;
+  node.fills = [{type:'SOLID', color}];
+}
+function frame(name:string, w:number, h:number) {
+  const f = figma.createFrame();
+  f.name = name;
+  f.resize(w, h);
+  setSolid(f, BG);
+  f.clipsContent = false;
+  return f;
+}
+function autoLayout(f: FrameNode, mode:'HORIZONTAL'|'VERTICAL', opts:Partial<FrameNode>={}) {
+  f.layoutMode = mode;
+  f.primaryAxisSizingMode = 'AUTO';
+  f.counterAxisSizingMode = 'AUTO';
+  f.itemSpacing = (opts as any).itemSpacing ?? 12;
+  f.paddingLeft = (opts as any).paddingLeft ?? 12;
+  f.paddingRight = (opts as any).paddingRight ?? 12;
+  f.paddingTop = (opts as any).paddingTop ?? 12;
+  f.paddingBottom = (opts as any).paddingBottom ?? 12;
+  f.primaryAxisAlignItems = (opts as any).primaryAxisAlignItems ?? 'MIN';
+  f.counterAxisAlignItems = (opts as any).counterAxisAlignItems ?? 'MIN';
+  f.cornerRadius = (opts as any).cornerRadius ?? 4;
+  return f;
+}
+function roundedRect(w:number,h:number, fill=COLORS.card) {
+  const r = figma.createRectangle();
+  r.resize(w,h);
+  setSolid(r, fill);
+  r.cornerRadius = 6;
+  setStroke(r, COLORS.stroke, 1);
+  return r;
+}
+function makeText(str:string, font:{family:string,style:string}, size:number, color:{r:number,g:number,b:number}) {
+  const t = figma.createText();
+  text(t, str, font, size, color);
+  return t;
+}
+function makeTitle(str:string) { return makeText(str, TitleFont, 28, COLORS.ink900); }
+function makeSubtitle(str:string){ return makeText(str, SubFont, 14, COLORS.ink700); }
+function makeSmall(str:string){ return makeText(str, SmallFont, 12, COLORS.ink600); }
+function makeBody(str:string){ return makeText(str, BodyFont, 14, COLORS.ink500); }
+
+// --------- Create Text & Color Styles ----------
+function createTextStyles() {
+  const s1 = figma.createTextStyle(); s1.name = "Text/Title 28 Bold";     s1.fontName = TitleFont; s1.fontSize = 28;
+  const s2 = figma.createTextStyle(); s2.name = "Text/Subtitle 14";       s2.fontName = SubFont;   s2.fontSize = 14;
+  const s3 = figma.createTextStyle(); s3.name = "Text/KPI Value 56 Bold"; s3.fontName = TitleFont; s3.fontSize = 56;
+  const s4 = figma.createTextStyle(); s4.name = "Text/Label 14";          s4.fontName = BodyFont;  s4.fontSize = 14;
+  const s5 = figma.createTextStyle(); s5.name = "Text/Small 12";          s5.fontName = SmallFont; s5.fontSize = 12;
+  return {s1,s2,s3,s4,s5};
+}
+function createColorStyles() {
+  const mk = (name:string, color:{r:number,g:number,b:number}) => {
+    const p = figma.createPaintStyle(); p.name = name; p.paints = [{type:'SOLID', color}]; return p;
+  };
+  return {
+    ink900: mk("Color/Ink 900", COLORS.ink900),
+    ink700: mk("Color/Ink 700", COLORS.ink700),
+    ink600: mk("Color/Ink 600", COLORS.ink600),
+    ink500: mk("Color/Ink 500", COLORS.ink500),
+    card:   mk("Color/Card",     COLORS.card),
+    stroke: mk("Color/Stroke",   COLORS.stroke),
+  };
+}
+
+// --------- Components ----------
+function createKpiComponent() {
+  const comp = figma.createComponent();
+  comp.name = "Comp/KPI Card";
+  const base = autoLayout(frame("KPI Card", 220, 110), 'VERTICAL', {
+    paddingLeft:16, paddingRight:16, paddingTop:12, paddingBottom:12, itemSpacing:8
+  });
+  setSolid(base, COLORS.card); setStroke(base, COLORS.stroke, 1);
+  const value = makeText("123", TitleFont, 56, COLORS.ink900);
+  const label = makeText("KPI Label", BodyFont, 14, COLORS.ink700);
+  base.appendChild(value); base.appendChild(label);
+  base.resize(220, 110);
+  comp.appendChild(base);
+  return comp;
+}
+function kpiInstance(comp: ComponentNode, valueStr:string, labelStr:string) {
+  const inst = comp.createInstance();
+  const frameNode = inst.findOne(n => n.type === 'FRAME' && n.name === "KPI Card") as FrameNode;
+  const [value, label] = frameNode.children as TextNode[];
+  value.characters = valueStr;
+  label.characters = labelStr;
+  return inst;
+}
+
+// --------- Chart placeholders ----------
+function makeChartFrame(name:string, w:number, h:number) {
+  const f = autoLayout(frame(name, w, h), 'VERTICAL', {
+    paddingLeft:12,paddingRight:12,paddingTop:10,paddingBottom:10,itemSpacing:8
+  });
+  setSolid(f, BG); setStroke(f, COLORS.stroke, 1);
+  return f;
+}
+function addChartTitle(parent: FrameNode, title:string) {
+  const t = makeText(title, MedFont, 14, COLORS.ink900);
+  parent.appendChild(t);
+}
+function funnelPlaceholder(parent: FrameNode, w:number) {
+  const container = autoLayout(frame("Funnel", w-24, 180), 'VERTICAL', {
+    paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:8
+  });
+  container.counterAxisAlignItems = 'CENTER';
+  const widths = [w-80, Math.max(w-140, 160), Math.max(w-200, 120)];
+  widths.forEach((ww,i) => {
+    const r = roundedRect(ww, 40, {r:0.95, g:0.95, b:1});
+    r.strokes = [{type:'SOLID', color: COLORS.stroke}]; (r as any).strokeWeight = 1;
+    container.appendChild(r);
+  });
+  parent.appendChild(container);
+}
+function barsPlaceholder(parent: FrameNode, w:number, h:number) {
+  const area = frame("BarsArea", w-24, h-60);
+  setSolid(area, {r:1,g:1,b:1}); setStroke(area, COLORS.stroke, 1);
+  // simple clustered bars
+  const barW = 18, gap=10, clusters=8, clusterGap=18;
+  let x = 40;
+  for (let c=0;c<clusters;c++){
+    for (let k=0;k<2;k++){
+      const bh = 30 + Math.round(Math.random()*90);
+      const bar = figma.createRectangle();
+      bar.resize(barW, bh);
+      setSolid(bar, {r:0.85, g:0.90, b:1});
+      setStroke(bar, COLORS.stroke, 1);
+      bar.x = x + k*(barW+gap);
+      bar.y = (area.height as number) - bh - 10;
+      area.appendChild(bar);
+    }
+    x += (2*barW + gap + clusterGap);
+    if (x > (area.width as number) - 40) break;
+  }
+  parent.appendChild(area);
+}
+function linePlaceholder(parent: FrameNode, w:number, h:number) {
+  const area = frame("LineArea", w-24, h-60);
+  setSolid(area, {r:1,g:1,b:1}); setStroke(area, COLORS.stroke, 1);
+  // simple zig-zag using rectangles to keep it lightweight
+  let prevX = 20, prevY = 90;
+  for (let i=1;i<=12;i++){
+    const x = 20 + i* ((area.width as number)-40)/12;
+    const y = 30 + Math.round(Math.random()*120);
+    const seg = figma.createLine();
+    seg.strokeWeight = 2;
+    seg.strokes = [{type:'SOLID', color: {r:0.35,g:0.45,b:0.95}}];
+    seg.x = Math.min(prevX,x);
+    seg.y = Math.min(prevY,y);
+    seg.rotation = Math.atan2(y-prevY, x-prevX) * 180 / Math.PI;
+    seg.resize( Math.hypot(x-prevX, y-prevY), 0 );
+    area.appendChild(seg);
+    prevX = x; prevY = y;
+  }
+  parent.appendChild(area);
+}
+function heatmapPlaceholder(parent: FrameNode, cols:number, rows:number, w:number, h:number) {
+  const area = frame("HeatmapArea", w-24, h-60);
+  setSolid(area, {r:1,g:1,b:1}); setStroke(area, COLORS.stroke, 1);
+  const pad = 16;
+  const cellW = ((area.width as number) - pad*2) / cols;
+  const cellH = ((area.height as number) - pad*2) / rows;
+  for (let r=0;r<rows;r++){
+    for (let c=0;c<cols;c++){
+      const cell = figma.createRectangle();
+      const v = Math.random()*0.6+0.2; // 0.2–0.8
+      cell.resize(cellW-4, cellH-4);
+      setSolid(cell, {r:1, g:(0.9 - 0.6*v), b:(0.9 - 0.6*v)});
+      setStroke(cell, COLORS.stroke, 1);
+      cell.x = pad + c*cellW + 2;
+      cell.y = pad + r*cellH + 2;
+      area.appendChild(cell);
+    }
+  }
+  parent.appendChild(area);
+}
+
+// --------- Build Page ----------
+const page = figma.createPage();
+page.name = "Dashboard Homepage";
+figma.currentPage = page;
+
+const {s1,s2,s3,s4,s5} = createTextStyles();
+const _colors = createColorStyles();
+
+const canvas = frame("Dashboard Homepage", CANVAS_WIDTH, CANVAS_HEIGHT);
+setSolid(canvas, BG);
+page.appendChild(canvas);
+
+// Header (HORIZONTAL: left stack + right text)
+const header = autoLayout(frame("Header", CANVAS_WIDTH, 80), 'HORIZONTAL', {
+  paddingLeft:MARGIN, paddingRight:MARGIN, paddingTop:12, paddingBottom:12,
+  itemSpacing:12, counterAxisAlignItems:'CENTER', primaryAxisAlignItems:'SPACE_BETWEEN'
+});
+const leftHeader = autoLayout(frame("HeaderLeft", 600, 56), 'VERTICAL', {
+  paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:6
+});
+leftHeader.appendChild(makeTitle("Salesforce nCino Credit Card Application Dashboard"));
+leftHeader.appendChild(makeSubtitle("Track application durations, stage progress, and bottlenecks by card type"));
+const lastRef = makeSmall(TODAY_STR);
+header.appendChild(leftHeader); header.appendChild(lastRef);
+header.x = 0; header.y = 0;
+canvas.appendChild(header);
+
+// Filters Pane (vertical auto layout with 3 slicers)
+const filtersPane = autoLayout(frame("Filters Pane", 240, 400), 'VERTICAL', {
+  paddingLeft:12,paddingRight:12,paddingTop:12,paddingBottom:12,itemSpacing:20
+});
+setSolid(filtersPane, BG); setStroke(filtersPane, COLORS.stroke, 1);
+filtersPane.x = MARGIN; filtersPane.y = 100;
+canvas.appendChild(filtersPane);
+
+function addSlicer(title:string){
+  const s = autoLayout(frame(`Slicer/${title}`, 240, 120), 'VERTICAL', {
+    paddingLeft:10,paddingRight:10,paddingTop:10,paddingBottom:10,itemSpacing:8
+  });
+  setSolid(s, COLORS.card); setStroke(s, COLORS.stroke, 1);
+  s.appendChild(makeText(title, MedFont, 14, COLORS.ink900));
+  // pills row
+  const pills = autoLayout(frame("Options", 220, 24), 'HORIZONTAL', {
+    paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:8, counterAxisAlignItems:'CENTER'
+  });
+  for (const p of ["All","A","B","C"]) {
+    const pill = autoLayout(frame(`Opt ${p}`, 10, 24), 'HORIZONTAL', {
+      paddingLeft:10,paddingRight:10,paddingTop:4,paddingBottom:4,itemSpacing:6, counterAxisAlignItems:'CENTER'
+    });
+    pill.cornerRadius = 999;
+    setSolid(pill, {r:0.95,g:0.95,b:0.95}); setStroke(pill, COLORS.stroke, 1);
+    pill.appendChild(makeText(p, BodyFont, 12, COLORS.ink700));
+    pills.appendChild(pill);
+  }
+  s.appendChild(pills);
+  return s;
+}
+filtersPane.appendChild(addSlicer("Card Type"));
+filtersPane.appendChild(addSlicer("Stage"));
+filtersPane.appendChild(addSlicer("Region"));
+
+// KPI Component + Row of 4
+const kpiComp = createKpiComponent();
+page.appendChild(kpiComp);
+const kpiRow = autoLayout(frame("KPI Row", (CANVAS_WIDTH - (MARGIN*2) - 240 - 20), 110), 'HORIZONTAL', {
+  paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:20, counterAxisAlignItems:'MIN'
+});
+kpiRow.x = 280; kpiRow.y = 100;
+const kpis = [
+  ["1,248","Total Applications"],
+  ["72%","Approval Rate"],
+  ["5.8d","Avg. Time to Decision"],
+  ["2.1d","Avg. Stage Dwell"]
+];
+for (const [v,l] of kpis) kpiRow.appendChild(kpiInstance(kpiComp, v, l));
+canvas.appendChild(kpiRow);
+
+// Main Visuals (absolute placement to match coordinates)
+function placeChart(name:string, x:number, y:number, w:number, h:number, build:(f:FrameNode)=>void) {
+  const chart = makeChartFrame(name, w, h);
+  chart.x = x; chart.y = y;
+  addChartTitle(chart, name);
+  build(chart);
+  canvas.appendChild(chart);
+  return chart;
+}
+// Sizes per spec
+placeChart("Funnel: Application Stages", 20, 520, 600, 250, f => funnelPlaceholder(f, 600));
+placeChart("Clustered Bar: Stage by Card Type", 640, 520, 580, 250, f => barsPlaceholder(f, 580, 250));
+placeChart("Line: Daily Intake (30d)", 20, 790, 600, 220, f => linePlaceholder(f, 600, 220));
+placeChart("Heatmap: Bottlenecks by Stage x Day", 640, 790, 580, 220, f => heatmapPlaceholder(f, 8, 5, 580, 220));
+
+// Footer
+const footer = autoLayout(frame("Footer", CANVAS_WIDTH - MARGIN*2, 40), 'HORIZONTAL', {
+  paddingLeft:12,paddingRight:12,paddingTop:8,paddingBottom:8, itemSpacing:8, primaryAxisAlignItems:'SPACE_BETWEEN', counterAxisAlignItems:'CENTER'
+});
+footer.x = MARGIN; footer.y = 1020;
+footer.appendChild(makeBody("Questions? BI Team • bi-team@example.com"));
+canvas.appendChild(footer);
+
+// Compact mode adjustments if height is 720
+if (CANVAS_HEIGHT <= 720) {
+  // Reduce y positions + shrink chart heights a bit
+  filtersPane.y = 90;
+  kpiRow.y = 90;
+  const shrink = (node:FrameNode, h:number)=> node.resize(node.width, h);
+  const funnel = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Funnel')) as FrameNode;
+  const bars   = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Clustered Bar')) as FrameNode;
+  const line   = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Line')) as FrameNode;
+  const heat   = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Heatmap')) as FrameNode;
+
+  if (funnel) { funnel.y = 300; shrink(funnel, 190); }
+  if (bars)   { bars.y   = 300; shrink(bars,   190); bars.x = 640; }
+  if (line)   { line.y   = 510; shrink(line,   170); }
+  if (heat)   { heat.y   = 510; shrink(heat,   170); }
+  footer.y = 690 - 40; // near bottom
+}
+
+figma.notify("Dashboard built ✅");
+figma.closePlugin();

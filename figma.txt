@@ -1,352 +1,327 @@
-// Figma Scripter script: nCino Credit Card Application Dashboard
-// Creates frames, text & color styles, components, auto layout, and chart placeholders.
-// Works best with Inter; falls back to Roboto if Inter isn't available.
+// Power BI Dashboard Layout Generator for Figma Scripter
+// nCino Credit Card Application Duration Dashboard
 
-async function loadFonts(fonts: {family:string, style:string}[]) {
-  for (const f of fonts) {
-    try { await figma.loadFontAsync(f); } catch { /* ignore, fallback handled */ }
-  }
-}
-function pickFont(...candidates: {family:string, style:string}[]) {
-  // Return the first family we successfully loaded; else last candidate.
-  for (const c of candidates) return c; // Scripter can't introspect loaded state; Inter usually loads.
-}
+// Dashboard dimensions
+const DASHBOARD_WIDTH = 1920;
+const DASHBOARD_HEIGHT = 1080;
+const PADDING = 24;
+const GAP = 16;
 
-const INTER_REG   = { family: "Inter",  style: "Regular" };
-const INTER_MED   = { family: "Inter",  style: "Medium"  };
-const INTER_BOLD  = { family: "Inter",  style: "Bold"    };
-const ROBOTO_REG  = { family: "Roboto", style: "Regular" };
-const ROBOTO_MED  = { family: "Roboto", style: "Medium"  };
-const ROBOTO_BOLD = { family: "Roboto", style: "Bold"    };
-
-const TitleFont   = pickFont(INTER_BOLD,  ROBOTO_BOLD);
-const SubFont     = pickFont(INTER_REG,   ROBOTO_REG);
-const MedFont     = pickFont(INTER_MED,   ROBOTO_MED);
-const BodyFont    = pickFont(INTER_REG,   ROBOTO_REG);
-const SmallFont   = pickFont(INTER_REG,   ROBOTO_REG);
-await loadFonts([TitleFont, SubFont, MedFont, BodyFont, SmallFont]);
-
-// --------- Config (edit as needed) ----------
-const CANVAS_WIDTH  = 1280;
-const CANVAS_HEIGHT = 1120;  // set to 720 for compact mode
-const MARGIN = 20;
-const BG = { r:1, g:1, b:1 }; // white
+// Color palette
 const COLORS = {
-  ink900: {r:0.066, g:0.066, b:0.066}, // #111111
-  ink700: {r:0.266, g:0.266, b:0.266}, // #444444
-  ink600: {r:0.4,   g:0.4,   b:0.4  }, // #666666
-  ink500: {r:0.333, g:0.333, b:0.333}, // #555555
-  card:   {r:0.973, g:0.973, b:0.973}, // #F8F8F8
-  stroke: {r:0.733, g:0.733, b:0.733}, // #BBBBBB
+  background: { r: 252/255, g: 252/255, b: 249/255 },
+  surface: { r: 255/255, g: 255/255, b: 253/255 },
+  border: { r: 94/255, g: 82/255, b: 64/255, a: 0.2 },
+  text: { r: 19/255, g: 52/255, b: 59/255 },
+  textSecondary: { r: 98/255, g: 108/255, b: 113/255 },
+  primary: { r: 33/255, g: 128/255, b: 141/255 },
+  consumer: { r: 59/255, g: 130/255, b: 246/255 },
+  business: { r: 34/255, g: 197/255, b: 94/255 },
+  commercial: { r: 249/255, g: 115/255, b: 22/255 },
+  success: { r: 33/255, g: 128/255, b: 141/255 },
+  warning: { r: 230/255, g: 129/255, b: 97/255 },
+  error: { r: 192/255, g: 21/255, b: 47/255 }
 };
-const TODAY_STR = "Last refreshed: 11/05/2025"; // update as needed
 
-// --------- Helpers ----------
-function setSolid(node: GeometryMixin, color:{r:number,g:number,b:number}) {
-  node.fills = [{type:'SOLID', color}];
-}
-function setStroke(node: GeometryMixin, color:{r:number,g:number,b:number}, w=1) {
-  (node as any).strokes = [{type:'SOLID', color}];
-  (node as any).strokeWeight = w;
-}
-function text(node: TextNode, str:string, font:{family:string,style:string}, size:number, color:{r:number,g:number,b:number}) {
-  node.fontName = font;
-  node.characters = str;
-  node.fontSize = size;
-  node.fills = [{type:'SOLID', color}];
-}
-function frame(name:string, w:number, h:number) {
-  const f = figma.createFrame();
-  f.name = name;
-  f.resize(w, h);
-  setSolid(f, BG);
-  f.clipsContent = false;
-  return f;
-}
-function autoLayout(f: FrameNode, mode:'HORIZONTAL'|'VERTICAL', opts:Partial<FrameNode>={}) {
-  f.layoutMode = mode;
-  f.primaryAxisSizingMode = 'AUTO';
-  f.counterAxisSizingMode = 'AUTO';
-  f.itemSpacing = (opts as any).itemSpacing ?? 12;
-  f.paddingLeft = (opts as any).paddingLeft ?? 12;
-  f.paddingRight = (opts as any).paddingRight ?? 12;
-  f.paddingTop = (opts as any).paddingTop ?? 12;
-  f.paddingBottom = (opts as any).paddingBottom ?? 12;
-  f.primaryAxisAlignItems = (opts as any).primaryAxisAlignItems ?? 'MIN';
-  f.counterAxisAlignItems = (opts as any).counterAxisAlignItems ?? 'MIN';
-  f.cornerRadius = (opts as any).cornerRadius ?? 4;
-  return f;
-}
-function roundedRect(w:number,h:number, fill=COLORS.card) {
-  const r = figma.createRectangle();
-  r.resize(w,h);
-  setSolid(r, fill);
-  r.cornerRadius = 6;
-  setStroke(r, COLORS.stroke, 1);
-  return r;
-}
-function makeText(str:string, font:{family:string,style:string}, size:number, color:{r:number,g:number,b:number}) {
-  const t = figma.createText();
-  text(t, str, font, size, color);
-  return t;
-}
-function makeTitle(str:string) { return makeText(str, TitleFont, 28, COLORS.ink900); }
-function makeSubtitle(str:string){ return makeText(str, SubFont, 14, COLORS.ink700); }
-function makeSmall(str:string){ return makeText(str, SmallFont, 12, COLORS.ink600); }
-function makeBody(str:string){ return makeText(str, BodyFont, 14, COLORS.ink500); }
-
-// --------- Create Text & Color Styles ----------
-function createTextStyles() {
-  const s1 = figma.createTextStyle(); s1.name = "Text/Title 28 Bold";     s1.fontName = TitleFont; s1.fontSize = 28;
-  const s2 = figma.createTextStyle(); s2.name = "Text/Subtitle 14";       s2.fontName = SubFont;   s2.fontSize = 14;
-  const s3 = figma.createTextStyle(); s3.name = "Text/KPI Value 56 Bold"; s3.fontName = TitleFont; s3.fontSize = 56;
-  const s4 = figma.createTextStyle(); s4.name = "Text/Label 14";          s4.fontName = BodyFont;  s4.fontSize = 14;
-  const s5 = figma.createTextStyle(); s5.name = "Text/Small 12";          s5.fontName = SmallFont; s5.fontSize = 12;
-  return {s1,s2,s3,s4,s5};
-}
-function createColorStyles() {
-  const mk = (name:string, color:{r:number,g:number,b:number}) => {
-    const p = figma.createPaintStyle(); p.name = name; p.paints = [{type:'SOLID', color}]; return p;
-  };
-  return {
-    ink900: mk("Color/Ink 900", COLORS.ink900),
-    ink700: mk("Color/Ink 700", COLORS.ink700),
-    ink600: mk("Color/Ink 600", COLORS.ink600),
-    ink500: mk("Color/Ink 500", COLORS.ink500),
-    card:   mk("Color/Card",     COLORS.card),
-    stroke: mk("Color/Stroke",   COLORS.stroke),
-  };
+// Helper function to create a rectangle
+function createRect(name, x, y, width, height, fillColor, cornerRadius = 8) {
+  const rect = figma.createRectangle();
+  rect.name = name;
+  rect.x = x;
+  rect.y = y;
+  rect.resize(width, height);
+  rect.fills = [{ type: 'SOLID', color: fillColor }];
+  rect.cornerRadius = cornerRadius;
+  rect.strokes = [{ type: 'SOLID', color: COLORS.border }];
+  rect.strokeWeight = 1;
+  return rect;
 }
 
-// --------- Components ----------
-function createKpiComponent() {
-  const comp = figma.createComponent();
-  comp.name = "Comp/KPI Card";
-  const base = autoLayout(frame("KPI Card", 220, 110), 'VERTICAL', {
-    paddingLeft:16, paddingRight:16, paddingTop:12, paddingBottom:12, itemSpacing:8
+// Helper function to create text
+function createText(content, x, y, fontSize = 14, fontWeight = 'Regular', color = COLORS.text) {
+  const text = figma.createText();
+  text.x = x;
+  text.y = y;
+  text.characters = content;
+  
+  // Load font and set properties
+  figma.loadFontAsync({ family: "Inter", style: fontWeight }).then(() => {
+    text.fontName = { family: "Inter", style: fontWeight };
+    text.fontSize = fontSize;
+    text.fills = [{ type: 'SOLID', color: color }];
   });
-  setSolid(base, COLORS.card); setStroke(base, COLORS.stroke, 1);
-  const value = makeText("123", TitleFont, 56, COLORS.ink900);
-  const label = makeText("KPI Label", BodyFont, 14, COLORS.ink700);
-  base.appendChild(value); base.appendChild(label);
-  base.resize(220, 110);
-  comp.appendChild(base);
-  return comp;
-}
-function kpiInstance(comp: ComponentNode, valueStr:string, labelStr:string) {
-  const inst = comp.createInstance();
-  const frameNode = inst.findOne(n => n.type === 'FRAME' && n.name === "KPI Card") as FrameNode;
-  const [value, label] = frameNode.children as TextNode[];
-  value.characters = valueStr;
-  label.characters = labelStr;
-  return inst;
+  
+  return text;
 }
 
-// --------- Chart placeholders ----------
-function makeChartFrame(name:string, w:number, h:number) {
-  const f = autoLayout(frame(name, w, h), 'VERTICAL', {
-    paddingLeft:12,paddingRight:12,paddingTop:10,paddingBottom:10,itemSpacing:8
-  });
-  setSolid(f, BG); setStroke(f, COLORS.stroke, 1);
-  return f;
-}
-function addChartTitle(parent: FrameNode, title:string) {
-  const t = makeText(title, MedFont, 14, COLORS.ink900);
-  parent.appendChild(t);
-}
-function funnelPlaceholder(parent: FrameNode, w:number) {
-  const container = autoLayout(frame("Funnel", w-24, 180), 'VERTICAL', {
-    paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:8
-  });
-  container.counterAxisAlignItems = 'CENTER';
-  const widths = [w-80, Math.max(w-140, 160), Math.max(w-200, 120)];
-  widths.forEach((ww,i) => {
-    const r = roundedRect(ww, 40, {r:0.95, g:0.95, b:1});
-    r.strokes = [{type:'SOLID', color: COLORS.stroke}]; (r as any).strokeWeight = 1;
-    container.appendChild(r);
-  });
-  parent.appendChild(container);
-}
-function barsPlaceholder(parent: FrameNode, w:number, h:number) {
-  const area = frame("BarsArea", w-24, h-60);
-  setSolid(area, {r:1,g:1,b:1}); setStroke(area, COLORS.stroke, 1);
-  // simple clustered bars
-  const barW = 18, gap=10, clusters=8, clusterGap=18;
-  let x = 40;
-  for (let c=0;c<clusters;c++){
-    for (let k=0;k<2;k++){
-      const bh = 30 + Math.round(Math.random()*90);
-      const bar = figma.createRectangle();
-      bar.resize(barW, bh);
-      setSolid(bar, {r:0.85, g:0.90, b:1});
-      setStroke(bar, COLORS.stroke, 1);
-      bar.x = x + k*(barW+gap);
-      bar.y = (area.height as number) - bh - 10;
-      area.appendChild(bar);
-    }
-    x += (2*barW + gap + clusterGap);
-    if (x > (area.width as number) - 40) break;
-  }
-  parent.appendChild(area);
-}
-function linePlaceholder(parent: FrameNode, w:number, h:number) {
-  const area = frame("LineArea", w-24, h-60);
-  setSolid(area, {r:1,g:1,b:1}); setStroke(area, COLORS.stroke, 1);
-  // simple zig-zag using rectangles to keep it lightweight
-  let prevX = 20, prevY = 90;
-  for (let i=1;i<=12;i++){
-    const x = 20 + i* ((area.width as number)-40)/12;
-    const y = 30 + Math.round(Math.random()*120);
-    const seg = figma.createLine();
-    seg.strokeWeight = 2;
-    seg.strokes = [{type:'SOLID', color: {r:0.35,g:0.45,b:0.95}}];
-    seg.x = Math.min(prevX,x);
-    seg.y = Math.min(prevY,y);
-    seg.rotation = Math.atan2(y-prevY, x-prevX) * 180 / Math.PI;
-    seg.resize( Math.hypot(x-prevX, y-prevY), 0 );
-    area.appendChild(seg);
-    prevX = x; prevY = y;
-  }
-  parent.appendChild(area);
-}
-function heatmapPlaceholder(parent: FrameNode, cols:number, rows:number, w:number, h:number) {
-  const area = frame("HeatmapArea", w-24, h-60);
-  setSolid(area, {r:1,g:1,b:1}); setStroke(area, COLORS.stroke, 1);
-  const pad = 16;
-  const cellW = ((area.width as number) - pad*2) / cols;
-  const cellH = ((area.height as number) - pad*2) / rows;
-  for (let r=0;r<rows;r++){
-    for (let c=0;c<cols;c++){
-      const cell = figma.createRectangle();
-      const v = Math.random()*0.6+0.2; // 0.2–0.8
-      cell.resize(cellW-4, cellH-4);
-      setSolid(cell, {r:1, g:(0.9 - 0.6*v), b:(0.9 - 0.6*v)});
-      setStroke(cell, COLORS.stroke, 1);
-      cell.x = pad + c*cellW + 2;
-      cell.y = pad + r*cellH + 2;
-      area.appendChild(cell);
-    }
-  }
-  parent.appendChild(area);
-}
+// Create main dashboard frame
+const dashboard = figma.createFrame();
+dashboard.name = "Power BI Dashboard - nCino Credit Card Applications";
+dashboard.resize(DASHBOARD_WIDTH, DASHBOARD_HEIGHT);
+dashboard.fills = [{ type: 'SOLID', color: COLORS.background }];
+dashboard.layoutMode = "NONE";
 
-// --------- Build Page ----------
-const page = figma.createPage();
-page.name = "Dashboard Homepage";
-figma.currentPage = page;
+// Title Section
+const title = createText("Credit Card Application Duration Dashboard", PADDING, PADDING, 24, "Bold");
+dashboard.appendChild(title);
 
-const {s1,s2,s3,s4,s5} = createTextStyles();
-const _colors = createColorStyles();
+const subtitle = createText("nCino Salesforce - Consumer, Business & Commercial Cards", PADDING, PADDING + 32, 14, "Regular", COLORS.textSecondary);
+dashboard.appendChild(subtitle);
 
-const canvas = frame("Dashboard Homepage", CANVAS_WIDTH, CANVAS_HEIGHT);
-setSolid(canvas, BG);
-page.appendChild(canvas);
+// Top KPI Banner (5 cards)
+const kpiY = PADDING + 70;
+const kpiHeight = 100;
+const kpiWidth = (DASHBOARD_WIDTH - PADDING * 2 - GAP * 4) / 5;
 
-// Header (HORIZONTAL: left stack + right text)
-const header = autoLayout(frame("Header", CANVAS_WIDTH, 80), 'HORIZONTAL', {
-  paddingLeft:MARGIN, paddingRight:MARGIN, paddingTop:12, paddingBottom:12,
-  itemSpacing:12, counterAxisAlignItems:'CENTER', primaryAxisAlignItems:'SPACE_BETWEEN'
-});
-const leftHeader = autoLayout(frame("HeaderLeft", 600, 56), 'VERTICAL', {
-  paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:6
-});
-leftHeader.appendChild(makeTitle("Salesforce nCino Credit Card Application Dashboard"));
-leftHeader.appendChild(makeSubtitle("Track application durations, stage progress, and bottlenecks by card type"));
-const lastRef = makeSmall(TODAY_STR);
-header.appendChild(leftHeader); header.appendChild(lastRef);
-header.x = 0; header.y = 0;
-canvas.appendChild(header);
-
-// Filters Pane (vertical auto layout with 3 slicers)
-const filtersPane = autoLayout(frame("Filters Pane", 240, 400), 'VERTICAL', {
-  paddingLeft:12,paddingRight:12,paddingTop:12,paddingBottom:12,itemSpacing:20
-});
-setSolid(filtersPane, BG); setStroke(filtersPane, COLORS.stroke, 1);
-filtersPane.x = MARGIN; filtersPane.y = 100;
-canvas.appendChild(filtersPane);
-
-function addSlicer(title:string){
-  const s = autoLayout(frame(`Slicer/${title}`, 240, 120), 'VERTICAL', {
-    paddingLeft:10,paddingRight:10,paddingTop:10,paddingBottom:10,itemSpacing:8
-  });
-  setSolid(s, COLORS.card); setStroke(s, COLORS.stroke, 1);
-  s.appendChild(makeText(title, MedFont, 14, COLORS.ink900));
-  // pills row
-  const pills = autoLayout(frame("Options", 220, 24), 'HORIZONTAL', {
-    paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:8, counterAxisAlignItems:'CENTER'
-  });
-  for (const p of ["All","A","B","C"]) {
-    const pill = autoLayout(frame(`Opt ${p}`, 10, 24), 'HORIZONTAL', {
-      paddingLeft:10,paddingRight:10,paddingTop:4,paddingBottom:4,itemSpacing:6, counterAxisAlignItems:'CENTER'
-    });
-    pill.cornerRadius = 999;
-    setSolid(pill, {r:0.95,g:0.95,b:0.95}); setStroke(pill, COLORS.stroke, 1);
-    pill.appendChild(makeText(p, BodyFont, 12, COLORS.ink700));
-    pills.appendChild(pill);
-  }
-  s.appendChild(pills);
-  return s;
-}
-filtersPane.appendChild(addSlicer("Card Type"));
-filtersPane.appendChild(addSlicer("Stage"));
-filtersPane.appendChild(addSlicer("Region"));
-
-// KPI Component + Row of 4
-const kpiComp = createKpiComponent();
-page.appendChild(kpiComp);
-const kpiRow = autoLayout(frame("KPI Row", (CANVAS_WIDTH - (MARGIN*2) - 240 - 20), 110), 'HORIZONTAL', {
-  paddingLeft:0,paddingRight:0,paddingTop:0,paddingBottom:0,itemSpacing:20, counterAxisAlignItems:'MIN'
-});
-kpiRow.x = 280; kpiRow.y = 100;
-const kpis = [
-  ["1,248","Total Applications"],
-  ["72%","Approval Rate"],
-  ["5.8d","Avg. Time to Decision"],
-  ["2.1d","Avg. Stage Dwell"]
+const kpiCards = [
+  { label: "Total Applications", value: "1,247", change: "+12.3%" },
+  { label: "Avg Duration", value: "18.4 days", change: "-2.1 days" },
+  { label: "In Progress", value: "342", change: "+8" },
+  { label: "Completion Rate", value: "87.2%", change: "+3.4%" },
+  { label: "SLA Compliance", value: "91.5%", change: "+5.2%" }
 ];
-for (const [v,l] of kpis) kpiRow.appendChild(kpiInstance(kpiComp, v, l));
-canvas.appendChild(kpiRow);
 
-// Main Visuals (absolute placement to match coordinates)
-function placeChart(name:string, x:number, y:number, w:number, h:number, build:(f:FrameNode)=>void) {
-  const chart = makeChartFrame(name, w, h);
-  chart.x = x; chart.y = y;
-  addChartTitle(chart, name);
-  build(chart);
-  canvas.appendChild(chart);
-  return chart;
-}
-// Sizes per spec
-placeChart("Funnel: Application Stages", 20, 520, 600, 250, f => funnelPlaceholder(f, 600));
-placeChart("Clustered Bar: Stage by Card Type", 640, 520, 580, 250, f => barsPlaceholder(f, 580, 250));
-placeChart("Line: Daily Intake (30d)", 20, 790, 600, 220, f => linePlaceholder(f, 600, 220));
-placeChart("Heatmap: Bottlenecks by Stage x Day", 640, 790, 580, 220, f => heatmapPlaceholder(f, 8, 5, 580, 220));
-
-// Footer
-const footer = autoLayout(frame("Footer", CANVAS_WIDTH - MARGIN*2, 40), 'HORIZONTAL', {
-  paddingLeft:12,paddingRight:12,paddingTop:8,paddingBottom:8, itemSpacing:8, primaryAxisAlignItems:'SPACE_BETWEEN', counterAxisAlignItems:'CENTER'
+kpiCards.forEach((kpi, i) => {
+  const x = PADDING + i * (kpiWidth + GAP);
+  const card = createRect(`KPI: ${kpi.label}`, x, kpiY, kpiWidth, kpiHeight, COLORS.surface, 12);
+  dashboard.appendChild(card);
+  
+  const labelText = createText(kpi.label, x + 16, kpiY + 16, 12, "Medium", COLORS.textSecondary);
+  dashboard.appendChild(labelText);
+  
+  const valueText = createText(kpi.value, x + 16, kpiY + 40, 28, "Bold", COLORS.text);
+  dashboard.appendChild(valueText);
+  
+  const changeText = createText(kpi.change, x + 16, kpiY + 74, 12, "Regular", COLORS.success);
+  dashboard.appendChild(changeText);
 });
-footer.x = MARGIN; footer.y = 1020;
-footer.appendChild(makeBody("Questions? BI Team • bi-team@example.com"));
-canvas.appendChild(footer);
 
-// Compact mode adjustments if height is 720
-if (CANVAS_HEIGHT <= 720) {
-  // Reduce y positions + shrink chart heights a bit
-  filtersPane.y = 90;
-  kpiRow.y = 90;
-  const shrink = (node:FrameNode, h:number)=> node.resize(node.width, h);
-  const funnel = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Funnel')) as FrameNode;
-  const bars   = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Clustered Bar')) as FrameNode;
-  const line   = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Line')) as FrameNode;
-  const heat   = canvas.findOne(n=>n.type==='FRAME' && n.name.startsWith('Heatmap')) as FrameNode;
+// Main content area
+const contentY = kpiY + kpiHeight + GAP + 8;
+const contentHeight = DASHBOARD_HEIGHT - contentY - PADDING;
 
-  if (funnel) { funnel.y = 300; shrink(funnel, 190); }
-  if (bars)   { bars.y   = 300; shrink(bars,   190); bars.x = 640; }
-  if (line)   { line.y   = 510; shrink(line,   170); }
-  if (heat)   { heat.y   = 510; shrink(heat,   170); }
-  footer.y = 690 - 40; // near bottom
+// Left column - Heat Map (largest visual)
+const heatMapWidth = (DASHBOARD_WIDTH - PADDING * 2 - GAP * 2) * 0.5;
+const heatMapHeight = contentHeight * 0.5;
+
+const heatMap = createRect("Stage Duration Heat Map", PADDING, contentY, heatMapWidth, heatMapHeight, COLORS.surface, 12);
+dashboard.appendChild(heatMap);
+
+const heatMapTitle = createText("Stage Duration Heat Map", PADDING + 16, contentY + 16, 16, "SemiBold");
+dashboard.appendChild(heatMapTitle);
+
+// Create heat map grid placeholder
+const gridStartY = contentY + 50;
+const gridStartX = PADDING + 16;
+const cellWidth = (heatMapWidth - 32 - 120) / 3; // 3 card types
+const cellHeight = 40;
+const stages = ["Submit", "Doc Review", "Credit", "Underwrite", "Approve", "Fulfill"];
+
+// Column headers
+["Consumer", "Business", "Commercial"].forEach((cardType, i) => {
+  const headerText = createText(cardType, gridStartX + 120 + i * cellWidth + cellWidth/2 - 30, gridStartY, 12, "SemiBold", COLORS.textSecondary);
+  dashboard.appendChild(headerText);
+});
+
+// Grid cells with color coding
+stages.forEach((stage, rowIndex) => {
+  // Stage label
+  const stageLabel = createText(stage, gridStartX, gridStartY + 28 + rowIndex * cellHeight + 12, 12, "Medium");
+  dashboard.appendChild(stageLabel);
+  
+  // Cells for each card type
+  [COLORS.success, COLORS.warning, COLORS.error].forEach((color, colIndex) => {
+    const cellX = gridStartX + 120 + colIndex * cellWidth;
+    const cellY = gridStartY + 28 + rowIndex * cellHeight;
+    const cell = createRect(`Cell-${stage}-${colIndex}`, cellX, cellY, cellWidth - 4, cellHeight - 4, COLORS.surface, 4);
+    cell.fills = [{ type: 'SOLID', color: { ...color, a: 0.15 } }];
+    cell.strokes = [{ type: 'SOLID', color: { ...color, a: 0.3 } }];
+    dashboard.appendChild(cell);
+    
+    // Duration value
+    const durationValues = ["3.2d", "5.8d", "12.4d"];
+    const durationText = createText(durationValues[colIndex], cellX + 8, cellY + 12, 12, "Medium");
+    dashboard.appendChild(durationText);
+  });
+});
+
+// Right column top - Waterfall Chart
+const waterfallX = PADDING + heatMapWidth + GAP;
+const waterfallWidth = DASHBOARD_WIDTH - waterfallX - PADDING;
+const waterfallHeight = heatMapHeight * 0.48;
+
+const waterfall = createRect("Application Flow Waterfall", waterfallX, contentY, waterfallWidth, waterfallHeight, COLORS.surface, 12);
+dashboard.appendChild(waterfall);
+
+const waterfallTitle = createText("Application Stage Flow", waterfallX + 16, contentY + 16, 16, "SemiBold");
+dashboard.appendChild(waterfallTitle);
+
+// Waterfall bars placeholder
+const barStartY = contentY + 50;
+const barStartX = waterfallX + 40;
+const barMaxWidth = waterfallWidth - 80;
+const barValues = [1247, 1185, 1121, 1087, 1042, 1018];
+
+barValues.forEach((value, i) => {
+  const barWidth = (value / barValues[0]) * barMaxWidth;
+  const barY = barStartY + i * 28;
+  
+  const bar = createRect(`Bar-${i}`, barStartX, barY, barWidth, 20, COLORS.primary, 4);
+  bar.fills = [{ type: 'SOLID', color: { ...COLORS.primary, a: 0.6 } }];
+  dashboard.appendChild(bar);
+  
+  const valueLabel = createText(value.toString(), barStartX + barWidth + 8, barY + 3, 11, "Medium");
+  dashboard.appendChild(valueLabel);
+});
+
+// Right column bottom - Top Slowest Applications
+const slowAppY = contentY + waterfallHeight + GAP;
+const slowAppHeight = heatMapHeight - waterfallHeight - GAP;
+
+const slowApps = createRect("Top 10 Slowest Applications", waterfallX, slowAppY, waterfallWidth, slowAppHeight, COLORS.surface, 12);
+dashboard.appendChild(slowApps);
+
+const slowAppsTitle = createText("Top 10 Slowest Applications", waterfallX + 16, slowAppY + 16, 16, "SemiBold");
+dashboard.appendChild(slowAppsTitle);
+
+// Table headers
+const tableHeaders = ["App ID", "Card Type", "Stage", "Days Open", "Risk"];
+const colWidths = [80, 90, 120, 80, 60];
+let colX = waterfallX + 16;
+
+tableHeaders.forEach((header, i) => {
+  const headerText = createText(header, colX, slowAppY + 50, 11, "SemiBold", COLORS.textSecondary);
+  dashboard.appendChild(headerText);
+  colX += colWidths[i];
+});
+
+// Sample table rows
+for (let row = 0; row < 5; row++) {
+  colX = waterfallX + 16;
+  const rowY = slowAppY + 75 + row * 28;
+  
+  const rowData = [`CC-${1000 + row}`, "Business", "Underwrite", `${25 + row * 3}d`, "🔴"];
+  rowData.forEach((data, i) => {
+    const cellText = createText(data, colX, rowY, 11, "Regular");
+    dashboard.appendChild(cellText);
+    colX += colWidths[i];
+  });
 }
 
-figma.notify("Dashboard built ✅");
-figma.closePlugin();
+// Bottom row - Pareto Chart and Box & Whisker
+const bottomY = contentY + heatMapHeight + GAP;
+const bottomHeight = contentHeight - heatMapHeight - GAP;
+
+// Pareto Chart (left)
+const paretoWidth = heatMapWidth * 0.58;
+const pareto = createRect("Pareto Analysis (80/20)", PADDING, bottomY, paretoWidth, bottomHeight, COLORS.surface, 12);
+dashboard.appendChild(pareto);
+
+const paretoTitle = createText("Pareto Analysis - Stage Impact (80/20)", PADDING + 16, bottomY + 16, 16, "SemiBold");
+dashboard.appendChild(paretoTitle);
+
+// Pareto bars and cumulative line
+const paretoBarY = bottomY + 60;
+const paretoBarHeight = bottomHeight - 100;
+const paretoStages = ["Underwrite", "Credit", "Doc Review", "Approve", "Fulfill", "Submit"];
+const paretoImpacts = [42, 28, 18, 7, 3, 2];
+
+paretoStages.forEach((stage, i) => {
+  const barX = PADDING + 40 + i * 65;
+  const barH = (paretoImpacts[i] / 42) * paretoBarHeight;
+  
+  const bar = createRect(`Pareto-${stage}`, barX, paretoBarY + paretoBarHeight - barH, 50, barH, COLORS.commercial, 4);
+  bar.fills = [{ type: 'SOLID', color: { ...COLORS.commercial, a: 0.7 } }];
+  dashboard.appendChild(bar);
+  
+  const label = createText(stage.slice(0, 5), barX, paretoBarY + paretoBarHeight + 10, 10, "Regular", COLORS.textSecondary);
+  dashboard.appendChild(label);
+  
+  const percentage = createText(`${paretoImpacts[i]}%`, barX + 12, paretoBarY + paretoBarHeight - barH - 20, 11, "SemiBold");
+  dashboard.appendChild(percentage);
+});
+
+// 80% reference line
+const line80 = createRect("80% Line", PADDING + 40, paretoBarY + paretoBarHeight * 0.2, paretoWidth - 80, 2, COLORS.error, 0);
+line80.strokes = [];
+dashboard.appendChild(line80);
+
+// Box & Whisker (middle)
+const boxWidth = heatMapWidth * 0.42;
+const boxX = PADDING + paretoWidth + GAP;
+
+const boxPlot = createRect("Stage Duration Variability", boxX, bottomY, boxWidth, bottomHeight, COLORS.surface, 12);
+dashboard.appendChild(boxPlot);
+
+const boxTitle = createText("Duration Variability by Stage", boxX + 16, bottomY + 16, 16, "SemiBold");
+dashboard.appendChild(boxTitle);
+
+// Box plot placeholders
+const boxPlotY = bottomY + 60;
+const boxStages = ["Submit", "Doc Rev", "Credit", "UW", "Approve"];
+
+boxStages.forEach((stage, i) => {
+  const bx = boxX + 30 + i * 70;
+  const by = boxPlotY + 50;
+  
+  // Whisker line
+  const whisker = createRect(`Whisker-${stage}`, bx + 23, by, 2, 180, COLORS.textSecondary, 0);
+  whisker.strokes = [];
+  dashboard.appendChild(whisker);
+  
+  // Box
+  const box = createRect(`Box-${stage}`, bx + 10, by + 60, 28, 60, COLORS.consumer, 2);
+  box.fills = [{ type: 'SOLID', color: { ...COLORS.consumer, a: 0.4 } }];
+  dashboard.appendChild(box);
+  
+  // Median line
+  const median = createRect(`Median-${stage}`, bx + 10, by + 90, 28, 2, COLORS.text, 0);
+  median.strokes = [];
+  dashboard.appendChild(median);
+  
+  const stageLabel = createText(stage, bx - 5, boxPlotY + 200, 10, "Regular", COLORS.textSecondary);
+  dashboard.appendChild(stageLabel);
+});
+
+// Velocity Gauges (right)
+const gaugeX = boxX + boxWidth + GAP;
+const gaugeWidth = DASHBOARD_WIDTH - gaugeX - PADDING;
+
+const gauges = createRect("Stage Velocity Gauges", gaugeX, bottomY, gaugeWidth, bottomHeight, COLORS.surface, 12);
+dashboard.appendChild(gauges);
+
+const gaugesTitle = createText("Stage Velocity (Apps/Day)", gaugeX + 16, bottomY + 16, 16, "SemiBold");
+dashboard.appendChild(gaugesTitle);
+
+// Individual gauges
+const gaugeStages = ["Submit", "Review", "Credit", "UW", "Approve", "Fulfill"];
+gaugeStages.forEach((stage, i) => {
+  const row = Math.floor(i / 2);
+  const col = i % 2;
+  const gx = gaugeX + 20 + col * 200;
+  const gy = bottomY + 60 + row * 110;
+  
+  // Gauge background arc
+  const gaugeBg = createRect(`Gauge-${stage}`, gx, gy, 80, 80, COLORS.background, 40);
+  gaugeBg.fills = [{ type: 'SOLID', color: { ...COLORS.textSecondary, a: 0.1 } }];
+  dashboard.appendChild(gaugeBg);
+  
+  // Gauge foreground (partial arc)
+  const gaugeFg = createRect(`Gauge-${stage}-fill`, gx, gy, 80, 80, COLORS.success, 40);
+  gaugeFg.fills = [{ type: 'SOLID', color: { ...COLORS.success, a: 0.7 } }];
+  gaugeFg.arcData = { startingAngle: -2.356, endingAngle: 0.785, innerRadius: 0.6 };
+  dashboard.appendChild(gaugeFg);
+  
+  const gaugeValue = createText("94%", gx + 25, gy + 30, 16, "Bold");
+  dashboard.appendChild(gaugeValue);
+  
+  const gaugeLabel = createText(stage, gx + 10, gy + 90, 12, "Medium", COLORS.textSecondary);
+  dashboard.appendChild(gaugeLabel);
+});
+
+// Select the dashboard frame
+figma.currentPage.selection = [dashboard];
+figma.viewport.scrollAndZoomIntoView([dashboard]);
+
+// Completion message
+figma.notify("✅ Dashboard layout created successfully! Customize colors and add details.", { timeout: 3000 });

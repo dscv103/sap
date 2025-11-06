@@ -264,3 +264,194 @@ Sources
 [8] Slow Dax Measure is there anyway to increase the p... https://community.powerbi.com/t5/Desktop/Slow-Dax-Measure-is-there-anyway-to-increase-the-performance-or/td-p/997529
 [9] Power BI DAX - Calculate a delay with filter and avoid circular ... https://stackoverflow.com/questions/67422199/power-bi-dax-calculate-a-delay-with-filter-and-avoid-circular-dependency
 [10] Analyzing events with a duration in DAX - SQLBI https://www.sqlbi.com/articles/analyzing-events-with-a-duration-in-dax/
+
+
+Perfect! You need to exclude the “Complete” and “Booked” stages from your standard deviation calculation since those stages continue accumulating time even though the application process is functionally complete. Here’s the corrected DAX measure:
+
+## Exclude Complete and Booked Stages
+
+**Total Delay Beyond StdDev (Excluding Complete/Booked)**
+```dax
+Total Delay Beyond StdDev Excluding Final = 
+VAR CleanedAvg = 
+    CALCULATE(
+        AVERAGEX(
+            Applications,
+            DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+        ),
+        Applications[Stage_Name] <> “Complete”,
+        Applications[Stage_Name] <> “Booked”,
+        Applications[Stage_Status] = “Completed”
+    )
+VAR CleanedStdDev = 
+    STDEVX.S(
+        FILTER(
+            ALL(Applications),
+            Applications[Stage_Name] <> “Complete”
+            && Applications[Stage_Name] <> “Booked”
+            && Applications[Stage_Status] = “Completed”
+        ),
+        DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    )
+VAR Threshold = CleanedAvg + CleanedStdDev
+RETURN
+SUMX(
+    FILTER(
+        Applications,
+        Applications[Stage_Name] <> “Complete”
+        && Applications[Stage_Name] <> “Booked”
+    ),
+    VAR ActualDuration = DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    VAR Delay = ActualDuration - Threshold
+    RETURN
+    IF(Delay > 0, Delay, 0)
+)
+```
+
+## Alternative: Using NOT IN for Multiple Exclusions
+
+**Total Delay Beyond StdDev (NOT IN Version)**
+```dax
+Total Delay Beyond StdDev Clean = 
+VAR ExcludedStages = {“Complete”, “Booked”}
+VAR CleanedAvg = 
+    CALCULATE(
+        AVERAGEX(
+            Applications,
+            DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+        ),
+        NOT(Applications[Stage_Name] IN ExcludedStages),
+        Applications[Stage_Status] = “Completed”
+    )
+VAR CleanedStdDev = 
+    STDEVX.S(
+        FILTER(
+            ALL(Applications),
+            NOT(Applications[Stage_Name] IN ExcludedStages)
+            && Applications[Stage_Status] = “Completed”
+        ),
+        DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    )
+VAR Threshold = CleanedAvg + CleanedStdDev
+RETURN
+SUMX(
+    FILTER(
+        Applications,
+        NOT(Applications[Stage_Name] IN ExcludedStages)
+    ),
+    VAR ActualDuration = DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    VAR Delay = ActualDuration - Threshold
+    RETURN
+    IF(Delay > 0, Delay, 0)
+)
+```
+
+This version uses the `NOT IN` syntax, making it easier to add additional stages to exclude in the future.[1][2]
+
+## With Additional Percentile Filtering
+
+**Total Delay Beyond StdDev (Exclude Stages + Outliers)**
+```dax
+Total Delay StdDev Final Clean = 
+VAR ExcludedStages = {“Complete”, “Booked”}
+VAR P95 = 
+    PERCENTILEX.INC(
+        FILTER(
+            ALL(Applications),
+            NOT(Applications[Stage_Name] IN ExcludedStages)
+            && Applications[Stage_Status] = “Completed”
+        ),
+        DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY),
+        0.95
+    )
+VAR CleanedAvg = 
+    CALCULATE(
+        AVERAGEX(
+            Applications,
+            DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+        ),
+        NOT(Applications[Stage_Name] IN ExcludedStages),
+        DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY) <= P95,
+        Applications[Stage_Status] = “Completed”
+    )
+VAR CleanedStdDev = 
+    STDEVX.S(
+        FILTER(
+            ALL(Applications),
+            NOT(Applications[Stage_Name] IN ExcludedStages)
+            && Applications[Stage_Status] = “Completed”
+            && DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY) <= P95
+        ),
+        DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    )
+VAR Threshold = CleanedAvg + CleanedStdDev
+RETURN
+SUMX(
+    FILTER(
+        Applications,
+        NOT(Applications[Stage_Name] IN ExcludedStages)
+    ),
+    VAR ActualDuration = DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    VAR Delay = ActualDuration - Threshold
+    RETURN
+    IF(Delay > 0, Delay, 0)
+)
+```
+
+This combines both approaches: excluding the Complete and Booked stages AND filtering out the top 5% of outliers from the remaining stages, giving you the most robust calculation.[2][3]
+
+## Stage-Specific Version
+
+**Total Delay by Active Stages Only**
+```dax
+Total Delay Active Stages = 
+VAR ActiveStages = {“Application Review”, “Credit Analysis”, “Underwriting”, “Approval”, “Documentation”}
+VAR StageAvg = 
+    CALCULATE(
+        AVERAGEX(
+            Applications,
+            DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+        ),
+        Applications[Stage_Name] IN ActiveStages,
+        Applications[Stage_Status] = “Completed”
+    )
+VAR StageStdDev = 
+    STDEVX.S(
+        FILTER(
+            ALL(Applications),
+            Applications[Stage_Name] IN ActiveStages
+            && Applications[Stage_Status] = “Completed”
+        ),
+        DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    )
+VAR Threshold = StageAvg + StageStdDev
+RETURN
+SUMX(
+    FILTER(
+        Applications,
+        Applications[Stage_Name] IN ActiveStages
+    ),
+    VAR ActualDuration = DATEDIFF(Applications[Stage_Start_Date], Applications[Stage_End_Date], DAY)
+    VAR Delay = ActualDuration - Threshold
+    RETURN
+    IF(Delay > 0, Delay, 0)
+)
+```
+
+This approach explicitly includes only the active processing stages, which may be cleaner if you have a defined list of operational stages.[1][2]
+
+By excluding Complete and Booked stages from your calculations, your average should remain around 2.77 days, and your standard deviation will be much more reasonable—likely in the range of 1-3 days rather than thousands. This will give you a meaningful threshold for identifying delayed applications in your Consumer, Business, and Commercial purchasing card workflows.[4][2][1]
+
+Sources
+[1] Solved: How to exclude certain value within Filter (illust... https://community.fabric.microsoft.com/t5/DAX-Commands-and-Tips/How-to-exclude-certain-value-within-Filter-illustrated-on-the/m-p/3762465
+[2] Need help with multiple filter values in DAX! - Fabric Community https://community.fabric.microsoft.com/t5/Desktop/Need-help-with-multiple-filter-values-in-DAX/td-p/3296393
+[3] Remove outliers- greater than 2 standard deviation from mean https://community.fabric.microsoft.com/t5/Desktop/Remove-outliers-greater-than-2-standard-deviation-from-mean/m-p/865721
+[4] How to exclude certain row values in dax measure? https://community.fabric.microsoft.com/t5/Desktop/How-to-exclude-certain-row-values-in-dax-measure/m-p/632861
+[5] How to ignore a specific filter in measure and keep all other filters? https://community.powerbi.com/t5/Desktop/How-to-ignore-a-specific-filter-in-measure-and-keep-all-other/td-p/2496324
+[6] ALLEXCEPT function (DAX) - Microsoft Learn https://learn.microsoft.com/en-us/dax/allexcept-function-dax
+[7] DAX for Power BI Part 5.4 - Removing Filters with AllSelected and ... https://www.youtube.com/watch?v=YU30TD1qIvQ
+[8] Learn methods to exclude measures in calculation groups with DAX ... https://www.youtube.com/watch?v=Op-JUSyP4XM
+[9] How to Exclude Selected Values in a Power BI Slicer - YouTube https://www.youtube.com/watch?v=tqMnmHKdcVQ
+[10] How to create a DAX measure to filter a table on multiple levels https://www.reddit.com/r/PowerBI/comments/qg8fv9/how_to_create_a_dax_measure_to_filter_a_table_on/
+[11] DAX code to ignore the row context... help! : r/PowerBI - Reddit https://www.reddit.com/r/PowerBI/comments/gevy0j/dax_code_to_ignore_the_row_context_help/
+

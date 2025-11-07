@@ -1,0 +1,95 @@
+Got it--if the goal is "which stage is the bottleneck?", use stage-level percentiles + share of total time (far easier to interpret than log-SD). Below is a drop-in DAX recipe that:
+	1.	cleans duration (drop negatives; choose whether to drop zeros),
+	2.	computes per-stage P50/P90 across loans,
+	3.	measures the stage’s average share of total loan time, and
+	4.	combines them into a Bottleneck Score you can sort/rank.
+
+⸻
+
+1) Clean the duration
+
+(Choose ONE line for zeros: keep or drop.)
+
+-- Calculated column on OppHis
+Clean_Duration :=
+VAR d = OppHis[Duration]
+RETURN
+    IF(d <= 0, BLANK(), d)     -- drop zeros & negatives
+    -- IF(d < 0, BLANK(), d)   -- keep zeros (uncomment this line instead)
+
+2) Base measures
+
+-- Sum in current filter context (stage, product, etc.)
+[Stage Duration (sum)] := SUM(OppHis[Clean_Duration])
+
+-- Total duration per loan (ignores Stage filter, keeps the loan context)
+[Loan Total Duration] :=
+CALCULATE(
+    SUM(OppHis[Clean_Duration]),
+    ALLEXCEPT(OppHis, OppHis[llc_bi__loan__c])
+)
+
+3) Per-stage distribution across loans
+
+We compute stats loan by loan for the current stage.
+
+-- Virtual table: one row per loan with that stage's total time
+LoanStageDurations :=
+VAR T =
+    SUMMARIZE(
+        VALUES(OppHis[llc_bi__loan__c]),
+        OppHis[llc_bi__loan__c],
+        "__dur", CALCULATE([Stage Duration (sum)])
+    )
+RETURN T
+
+-- Median and 90th percentile time spent in the stage (across loans)
+[P50 Stage (days)] := PERCENTILEX.INC( LoanStageDurations, [__dur], 0.5 )
+[P90 Stage (days)] := PERCENTILEX.INC( LoanStageDurations, [__dur], 0.9 )
+
+-- Long-tail factor (how fat the tail is)
+[Long-Tail Ratio] := DIVIDE([P90 Stage (days)], [P50 Stage (days)])
+
+4) "How much of the loan does this stage consume?"
+
+Average share of total loan time that this stage takes.
+
+[Avg Share of Loan Time] :=
+AVERAGEX(
+    VALUES(OppHis[llc_bi__loan__c]),
+    DIVIDE(
+        CALCULATE([Stage Duration (sum)]),          -- this stage
+        CALCULATE([Loan Total Duration])            -- all stages for that loan
+    )
+)
+
+5) Bottleneck score + rank
+
+Bigger when a stage both (a) takes a big share and (b) has a long tail.
+
+[Bottleneck Score] := [Avg Share of Loan Time] * [Long-Tail Ratio]
+
+[Stage Rank (Bottleneck)] :=
+RANKX(
+    ALL(OppHis[Stage]),        -- replace with your stage column
+    [Bottleneck Score],
+    ,
+    DESC,
+    DENSE
+)
+
+
+⸻
+
+How to use it
+	•	Put Stage on a bar chart and sort by [Bottleneck Score] (or show [Stage Rank]).
+	•	Add tooltips: [P50 Stage], [P90 Stage], [Avg Share of Loan Time].
+	•	Optional split by product/branch/channel to see where the bottleneck stage is worst.
+
+Quick read:
+	•	P50 ≈ "typical" time per stage.
+	•	P90 shows tail pain (aging files).
+	•	Avg Share says how much of a loan’s total time that stage consumes.
+	•	Bottleneck Score combines both so the worst stages float to the top.
+
+You can keep your earlier log work for deep-dive modeling, but for ops decisions and prioritization, the P50/P90 + share combo is usually the clearest way to pinpoint the bottleneck stage.

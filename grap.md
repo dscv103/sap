@@ -113,7 +113,7 @@ def f(x: int, y: int) -> int:
 docstrings/comments).[3]
 
 **Rule: Use Google-style docstrings with clear sections (Args/Returns/Raises)
-for public functions/classes).**[2, 1]
+for public functions/classes.**[2, 1]
 
 **Bad example:**
 

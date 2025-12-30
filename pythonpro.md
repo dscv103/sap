@@ -12,18 +12,18 @@ This setup uses uv for fast, reproducible environments + lockfiles and Hatch for
 
 ## 1) Create the project skeleton (`src/` layout)
 1. Create and enter the repo directory:
-   ```
+   ```bash
    mkdir acme-tool
    cd acme-tool
    ```
 
 2. Initialize a Hatch project:
-   ```
-   hatch new —init
+   ```bash
+   hatch new --init
    ```
 
 3. Create a `src/` layout for your import package:
-   ```
+   ```bash
    mkdir -p src/acme_tool
    touch src/acme_tool/__init__.py
    ```
@@ -44,7 +44,7 @@ Edit `pyproject.toml` to contain:
 
 Use this template (adjust metadata as needed):
 
-```
+```toml
 [build-system]
 requires = [“hatchling>=1.26”]
 build-backend = “hatchling.build”
@@ -91,7 +91,7 @@ typecheck = “ty check src”
 test = “pytest -q”
 
 # Coverage
-coverage = “pytest -q —cov=acme_tool —cov-report=term-missing”
+coverage = “pytest -q --cov=acme_tool --cov-report=term-missing”
 
 # Security (static checks)
 security = “bandit -r src”
@@ -100,7 +100,7 @@ security = “bandit -r src”
 ## 3) Implement the Typer CLI (autocomplete enabled)
 1. Create `src/acme_tool/cli.py`:
 
-```
+```python
 import typer
 from rich.console import Console
 
@@ -118,60 +118,60 @@ def version() -> None:
     console.print(“acme-tool 0.1.0”)
 ```
 
-2. (Optional) Add `src/acme_tool/__main__.py` to support `python -m acme_tool —help`:
+2. (Optional) Add `src/acme_tool/__main__.py` to support `python -m acme_tool --help`:
 
-```
+```python
 from .cli import app
 app(prog_name=“acme-tool”)
 ```
 
 ## 4) Create env + lock + sync (editable) with uv (Python 3.13)
 1. Create a venv using Python 3.13:
-   ```
-   uv venv —python 3.13
+   ```bash
+   uv venv --python 3.13
    ```
 
 2. Add runtime dependencies (writes to `[project].dependencies`):
-   ```
+   ```bash
    uv add typer rich
    ```
 
 3. Add dev tooling dependencies (writes to `[dependency-groups].dev`):
-   ```
-   uv add —dev ruff ty pytest pytest-cov coverage bandit
+   ```bash
+   uv add --dev ruff ty pytest pytest-cov coverage bandit
    ```
 
 4. Create/update the lockfile:
-   ```
+   ```bash
    uv lock
    ```
 
 5. Sync the environment from the lockfile:
-   ```
+   ```bash
    uv sync
    ```
 
 6. Run the CLI:
-   ```
-   uv run acme-tool —help
-   uv run acme-tool hello —name Alice
+   ```bash
+   uv run acme-tool --help
+   uv run acme-tool hello --name Alice
    ```
 
 ## 5) Dev commands (choose uv or Hatch)
 Because uv syncs dev dependencies by default when they are in the `dev` dependency group, either approach below works:
 
 Option A (recommended): run via uv (auto lock+sync before execution)
-```
+```bash
 uv run ruff check .
 uv run ruff format .
 uv run ty check src
 uv run pytest -q
-uv run pytest -q —cov=acme_tool —cov-report=term-missing
+uv run pytest -q --cov=acme_tool --cov-report=term-missing
 uv run bandit -r src
 ```
 
 Option B: run via Hatch scripts (team-friendly aliases)
-```
+```bash
 hatch run lint
 hatch run format
 hatch run typecheck
@@ -182,20 +182,21 @@ hatch run security
 
 ## 6) Shell completion (end users)
 After installing your package, a user can install completion for their shell:
-```
-acme-tool —install-completion
+```bash
+acme-tool --install-completion
 ```
 
 ## 7) Build + CI (frozen)
 1. Build wheel + sdist:
-   ```
+   ```bash
    hatch build
    ```
 
 2. CI install must forbid dependency drift:
+   ```bash
+   uv sync --frozen
    ```
-   uv sync —frozen
-   ```
+
 ```
 
 Sources

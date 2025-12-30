@@ -95,4 +95,7 @@ Quick read:
 	•	Avg Share says how much of a loan’s total time that stage consumes.
 	•	Bottleneck Score combines both so the worst stages float to the top.
 
+cpk_c6d4606e031b4a35a0d200b96fefcb01.d590d98f53f350fcbf0152361deb93c4.kA1d9XG6pCyIT1DZe89Jr9eqO0Pdw37d
+
+
 You can keep your earlier log work for deep-dive modeling, but for ops decisions and prioritization, the P50/P90 + share combo is usually the clearest way to pinpoint the bottleneck stage.

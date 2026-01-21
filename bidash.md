@@ -1,3 +1,5 @@
+cpk_65254f0104f248e6984c6d5d9c85cc60.d590d98f53f350fcbf0152361deb93c4.IKlmU8l6AqAeNT9nZ55fyA3ZTWBuF47h
+
 Based on your nCino credit card application dashboard, here are the most effective visual types and layouts specifically for **efficiency and bottleneck analysis**:
 
 ***

@@ -1,0 +1,101 @@
+ Early-warning churn scoring + save journeys
+Business objective (profit lever)
+Reduce voluntary closure / spend inactivity by intervening before the customer defects, preserving:
+
+Interchange (keep spend active)
+Interest (keep revolve balances)
+Fee revenue (avoid closure; avoid avoidable fee disputes)
+
+Lifecycle location
+Retention (late usage/servicing boundary); triggers also work post-statement or post-decline.
+Decision points & interventions
+Decision points
+
+Weekly “churn risk” score (batch)
+Event-based triggers (decline spike, spend collapse, fee posting)
+
+Interventions (graduated by cost)
+
+Low-cost: push/email/statement message (“Use your card for X and earn Y”, autopay nudge, “you’re close to reward”)
+Mid-cost: targeted category offer (e.g., 3% back groceries for 60 days)
+High-cost (only for high CLV & high risk): fee credit/waiver, retention APR promo, BT offer, dedicated save call
+
+Data required + feature ideas (only your fields)
+Account
+
+Tenure, APR, line, utilization, balance trends
+Revolve indicator: balance carried / interest charged
+Fee incidence: late fee, annual fee, overlimit (if present)
+Delinquency status / days past due, recent cures
+Rewards: earn rate, points balance, redemption activity (if available)
+
+Txn / MCC aggregates
+
+Spend velocity: 4/8/12-week spend, txn count
+Spend trend features: % drop vs prior period; slope; volatility
+Category mix shifts (e.g., grocery/gas collapse), “breadth” of categories
+Auth decline rate: #declines / #auths, decline reason bucket if available
+Merchant concentration (top-merchant share) and sudden change
+
+Example churn signals you can build immediately
+
+Spend cliff: spend down >70% vs trailing 8-week average
+Decline shock: decline rate doubled week-over-week
+Rate pain: interest charges rising while spend falling
+Fee friction: multiple fees in 60 days + spend drop
+Utilization stress: util ↑ sharply + min payment behavior deteriorates
+
+Modeling options (2–4) + pros/cons
+
+Survival model (Cox / discrete-time hazard)
+
+Pros: predicts when churn happens; good for timing interventions
+Cons: more complex; needs careful handling of censoring
+
+
+Gradient-boosted trees (XGBoost/LightGBM) classification
+
+Pros: strong accuracy with non-linear patterns; handles interactions
+Cons: needs explainability layer (SHAP) and drift monitoring
+
+
+Regularized logistic regression (elastic net)
+
+Pros: highly interpretable; easy governance
+Cons: may miss non-linearities; slightly lower lift
+
+
+
+Recommended: start with logistic baseline for speed + governance, then graduate to GBM if it adds meaningful lift and remains explainable.
+Evaluation design
+Offline
+
+Time-based split (train: months 1–9, validate: 10–11, test: 12)
+Metrics: AUC/PR-AUC, calibration, lift in top deciles, stability by tenure/product
+Profit simulation: assign expected incremental profit by segment × intervention cost
+
+Online test (preferred)
+
+Randomized holdout within each risk band:
+
+High risk: 70% treated / 30% control
+Medium: 50/50
+Low: small test or no action
+
+
+Primary KPI: Δ retention (closure rate, spend-active rate)
+Profit KPI: Δ interchange + Δ interest + Δ fees − Δ rewards − Δ losses − campaign cost
+Guardrails: delinquency roll rates, complaints/opt-outs, over-contact rate
+
+Deployment integration
+
+Scoring pipeline: weekly batch score to CRM/decision engine table
+Trigger service: real-time(ish) rules for decline spike/spend cliff (daily)
+Orchestration: journey tool selects message/offer based on:
+
+churn score band
+value tier (proxy CLV from spend+revolve history)
+risk guardrails (exclude recent delinquency worsening)
+
+
+Agent desktop: if inbound call occurs, show “save prompt” with top drivers and approved offers

@@ -3,6 +3,7 @@ Based on the efficiency and bottleneck metrics for your nCino credit card applic
 ## Stage Duration Measures
 
 **Average Time in Stage (Days)**
+
 ```dax
 Avg Stage Duration = 
 AVERAGEX(
@@ -12,6 +13,7 @@ AVERAGEX(
 ```
 
 **Median Time in Stage (Days)**
+
 ```dax
 Median Stage Duration = 
 MEDIANX(
@@ -21,6 +23,7 @@ MEDIANX(
 ```
 
 **Stage Cycle Time by Card Type**
+
 ```dax
 Stage Cycle Time = 
 CALCULATE(
@@ -33,6 +36,7 @@ CALCULATE(
 ```
 
 **Time to First Action (Hours)**
+
 ```dax
 Time to First Action = 
 AVERAGEX(
@@ -44,6 +48,7 @@ AVERAGEX(
 ## Bottleneck Identification Measures
 
 **Stage Velocity (Applications per Day)**
+
 ```dax
 Stage Velocity = 
 VAR TotalApps = COUNT(Applications[Application_ID])
@@ -53,6 +58,7 @@ DIVIDE(TotalApps, DateRange, 0)
 ```
 
 **Queue Depth (Current Applications Waiting)**
+
 ```dax
 Queue Depth = 
 CALCULATE(
@@ -63,6 +69,7 @@ CALCULATE(
 ```
 
 **Touch Time vs Queue Time Ratio**
+
 ```dax
 Touch Time Ratio = 
 VAR TouchTime = SUM(Applications[Active_Processing_Hours])
@@ -73,6 +80,7 @@ DIVIDE(TouchTime, TotalTime, 0)
 ```
 
 **Stage Abandonment Rate (%)**
+
 ```dax
 Stage Abandonment Rate = 
 VAR Abandoned = CALCULATE(COUNT(Applications[Application_ID]), Applications[Status] = "Withdrawn")
@@ -82,6 +90,7 @@ DIVIDE(Abandoned, Total, 0) * 100
 ```
 
 **Exception Rate by Stage (%)**
+
 ```dax
 Exception Rate = 
 VAR Exceptions = CALCULATE(COUNT(Applications[Application_ID]), Applications[Exception_Flag] = TRUE())
@@ -93,6 +102,7 @@ DIVIDE(Exceptions, Total, 0) * 100
 ## Comparative Performance Measures
 
 **Stage Duration Variance by Card Type**
+
 ```dax
 Duration Variance = 
 VAR ConsumerAvg = CALCULATE([Avg Stage Duration], Applications[Card_Type] = "Consumer")
@@ -110,6 +120,7 @@ SWITCH(
 ```
 
 **Stage-to-Stage Transition Time (Hours)**
+
 ```dax
 Transition Time = 
 VAR CurrentStage = SELECTEDVALUE(Applications[Stage_Name])
@@ -124,6 +135,7 @@ DATEDIFF(PreviousStageEnd, CurrentStageStart, HOUR)
 ```
 
 **Percentage Above Target SLA (%)**
+
 ```dax
 Above SLA % = 
 VAR AboveSLA = 
@@ -137,6 +149,7 @@ DIVIDE(AboveSLA, Total, 0) * 100
 ```
 
 **Stage Throughput Rate (%)**
+
 ```dax
 Throughput Rate = 
 VAR OnTime = 
@@ -152,6 +165,7 @@ DIVIDE(OnTime, Total, 0) * 100
 ## Workload Distribution Measures
 
 **Applications in Progress by Stage**
+
 ```dax
 Apps in Progress = 
 CALCULATE(
@@ -162,6 +176,7 @@ CALCULATE(
 ```
 
 **Stage Utilization Rate (%)**
+
 ```dax
 Utilization Rate = 
 VAR ActualHours = SUM(Applications[Active_Processing_Hours])
@@ -171,6 +186,7 @@ DIVIDE(ActualHours, AvailableHours, 0) * 100
 ```
 
 **Backlog Age (Days)**
+
 ```dax
 Backlog Age = 
 AVERAGEX(
@@ -180,6 +196,7 @@ AVERAGEX(
 ```
 
 **Maximum Backlog Age**
+
 ```dax
 Max Backlog Age = 
 MAXX(
@@ -191,6 +208,7 @@ MAXX(
 ## Predictive Efficiency Measures
 
 **Average Days to Completion**
+
 ```dax
 Days to Completion = 
 VAR CurrentStage = SELECTEDVALUE(Applications[Stage_Name])
@@ -208,6 +226,7 @@ HistoricalAvg
 ```
 
 **Stage Completion Probability (%)**
+
 ```dax
 Completion Probability = 
 VAR CurrentDuration = SELECTEDVALUE(Applications[Days_in_Current_Stage])
@@ -224,6 +243,7 @@ HistoricalSuccess * 100
 ```
 
 **Bottleneck Impact Score**
+
 ```dax
 Bottleneck Impact = 
 VAR CurrentStageDelay = [Avg Stage Duration] - [SLA Target]
@@ -240,6 +260,7 @@ ImpactMultiplier
 ## Trend Analysis Measures
 
 **Stage Duration Trend (30-Day Moving Average)**
+
 ```dax
 Duration Trend MA30 = 
 CALCULATE(
@@ -254,6 +275,7 @@ CALCULATE(
 ```
 
 **Month-over-Month Stage Performance (%)**
+
 ```dax
 MoM Stage Performance = 
 VAR CurrentMonth = [Avg Stage Duration]
@@ -267,6 +289,7 @@ DIVIDE(CurrentMonth - PreviousMonth, PreviousMonth, 0) * 100
 ```
 
 **Peak Load Hour Indicator**
+
 ```dax
 Peak Load Hours = 
 TOPN(
@@ -284,6 +307,7 @@ TOPN(
 ## Card Type Comparison Measures
 
 **Consumer vs Business Duration Delta (Days)**
+
 ```dax
 Consumer vs Business Delta = 
 VAR ConsumerDuration = CALCULATE([Avg Stage Duration], Applications[Card_Type] = "Consumer")
@@ -293,6 +317,7 @@ ConsumerDuration - BusinessDuration
 ```
 
 **Card Type with Longest Duration**
+
 ```dax
 Slowest Card Type = 
 MAXX(
@@ -308,13 +333,13 @@ MAXX(
 These DAX measures provide comprehensive stage-level tracking across your consumer, business, and commercial purchasing card applications, enabling you to identify bottlenecks, monitor efficiency, and optimize your nCino credit card application workflow.[1][2][3][4]
 
 Sources
-[1] Analyzing events with a duration in DAX - SQLBI https://www.sqlbi.com/articles/analyzing-events-with-a-duration-in-dax/
-[2] DATEDIFF function (DAX) - Microsoft Learn https://learn.microsoft.com/en-us/dax/datediff-function-dax
-[3] How to Calculate Mean, Median & Mode in Power BI using DAX https://www.youtube.com/watch?v=75HO3lFyWPc
-[4] How to Calculate Date Differences in Power BI with DAX Functions https://www.singdata.com/trending/powerbi-date-difference-dax-calculations/
-[5] DAX Measure Help - Calculate time duration between two records? https://www.reddit.com/r/PowerBI/comments/w25dzz/dax_measure_help_calculate_time_duration_between/
-[6] DAX with Dates: The Power Plays - CODE Magazine https://www.codemag.com/Article/2111051/DAX-with-Dates-The-Power-Plays
-[7] CALCULATE TIME DURATION between two periods in POWER BI ... https://www.youtube.com/watch?v=FAer11RUsDc
-[8] Identify Power BI Performance Bottlenecks Using the ... - B EYE https://b-eye.com/blog/power-bi-performance-analyzer-tutorial/
-[9] Power BI DAX - Running the MEDIAN or MEDIANX formu... https://community.powerbi.com/t5/Desktop/Power-BI-DAX-Running-the-MEDIAN-or-MEDIANX-formula-for-a/td-p/1082305
-[10] Identify Model Bottlenecks - DAX Optimizer https://www.daxoptimizer.com/features/identify-model-bottlenecks/
+[1] Analyzing events with a duration in DAX - SQLBI <https://www.sqlbi.com/articles/analyzing-events-with-a-duration-in-dax/>
+[2] DATEDIFF function (DAX) - Microsoft Learn <https://learn.microsoft.com/en-us/dax/datediff-function-dax>
+[3] How to Calculate Mean, Median & Mode in Power BI using DAX <https://www.youtube.com/watch?v=75HO3lFyWPc>
+[4] How to Calculate Date Differences in Power BI with DAX Functions <https://www.singdata.com/trending/powerbi-date-difference-dax-calculations/>
+[5] DAX Measure Help - Calculate time duration between two records? <https://www.reddit.com/r/PowerBI/comments/w25dzz/dax_measure_help_calculate_time_duration_between/>
+[6] DAX with Dates: The Power Plays - CODE Magazine <https://www.codemag.com/Article/2111051/DAX-with-Dates-The-Power-Plays>
+[7] CALCULATE TIME DURATION between two periods in POWER BI ... <https://www.youtube.com/watch?v=FAer11RUsDc>
+[8] Identify Power BI Performance Bottlenecks Using the ... - B EYE <https://b-eye.com/blog/power-bi-performance-analyzer-tutorial/>
+[9] Power BI DAX - Running the MEDIAN or MEDIANX formu... <https://community.powerbi.com/t5/Desktop/Power-BI-DAX-Running-the-MEDIAN-or-MEDIANX-formula-for-a/td-p/1082305>
+[10] Identify Model Bottlenecks - DAX Optimizer <https://www.daxoptimizer.com/features/identify-model-bottlenecks/>

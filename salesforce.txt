@@ -1,0 +1,128 @@
+In a Salesforce-to-SQL-Server extract with no declared FKs, you can infer relationships by (1) learning each table’s Salesforce object "key prefixes" from its `Id` values, then (2) matching any candidate reference column’s prefixes back to the parent table, and (3) validating with anti-joins + uniqueness tests to label 1–many, 1–1, and many–many.[1][2]
+
+## Salesforce clues to exploit
+Salesforce record IDs embed a 3-character "entity key prefix" that identifies the object type, and you can decode/leveraged it for object inference.[2][1]
+Custom objects have API names ending in `__c` (like `financial_center__c` and `LLC_BI_loan__c`).[3]
+Reference fields often end with `Id` (standard lookups like `OwnerId`) and store related-record IDs; similarly, many custom lookup/master-detail fields are `Something__c` fields that store the related record ID.[1][3]
+
+## Step 1: Build a prefix registry from your tables
+For each table that represents an object (e.g., `dbo.contact`, `dbo.financial_center__c`, `dbo.LLC_BI_loan__c`), sample `Id` and compute `LEFT(Id,3)`; that gives you the set of prefixes that table contains (usually one).[1]
+
+```sql
+-- Run per table to learn its key prefix(es)
+SELECT TOP (20000) LEFT(Id,3) AS prefix, COUNT(*) AS n
+FROM dbo.contact
+WHERE Id IS NOT NULL
+GROUP BY LEFT(Id,3);
+
+SELECT TOP (20000) LEFT(Id,3) AS prefix, COUNT(*) AS n
+FROM dbo.financial_center__c
+WHERE Id IS NOT NULL
+GROUP BY LEFT(Id,3);
+
+SELECT TOP (20000) LEFT(Id,3) AS prefix, COUNT(*) AS n
+FROM dbo.LLC_BI_loan__c
+WHERE Id IS NOT NULL
+GROUP BY LEFT(Id,3);
+```
+
+## Step 2: Find candidate "FK columns" in child tables
+In Salesforce data, start with columns whose names end in `Id` (standard relationship fields) and also columns ending in `__c` whose values *look like* Salesforce IDs, because `__c` is also used for custom relationship pointers (alongside other custom field types).[3][1]
+Then, for each candidate column in `dbo.LLC_BI_loan__c` (child), sample `LEFT(col,3)` and see which parent table(s) in your prefix registry match; if multiple match, treat it as potentially polymorphic.[4][2][1]
+
+Python sketch for discovery (reads metadata + profiles prefixes):
+```python
+import pandas as pd
+from sqlalchemy import create_engine, text
+
+engine = create_engine(
+    "mssql+pyodbc://USER:PWD@SERVER/DB?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+)
+
+tables = [("dbo","contact"), ("dbo","financial_center__c"), ("dbo","LLC_BI_loan__c")]
+
+def table_prefixes(schema, table, id_col="Id", sample=20000):
+    q = f"""
+    SELECT TOP ({sample}) LEFT([{id_col}],3) AS prefix, COUNT(*) AS n
+    FROM [{schema}].[{table}]
+    WHERE [{id_col}] IS NOT NULL
+    GROUP BY LEFT([{id_col}],3)
+    """
+    out = pd.read_sql(text(q), engine)
+    out["schema_name"] = schema
+    out["table_name"] = table
+    return out
+
+prefix_map = pd.concat([table_prefixes(s,t) for s,t in tables], ignore_index=True)
+# prefix_map columns: prefix, n, schema_name, table_name
+
+cols = pd.read_sql(text("""
+SELECT s.name AS schema_name, t.name AS table_name, c.name AS column_name
+FROM sys.tables t
+JOIN sys.schemas s ON s.schema_id=t.schema_id
+JOIN sys.columns c ON c.object_id=t.object_id
+WHERE s.name='dbo' AND t.name='LLC_BI_loan__c';
+"""), engine)
+
+candidates = cols[
+    (cols.column_name.str.endswith("Id")) |
+    (cols.column_name.str.endswith("__c"))
+].copy()
+
+def infer_parent(schema, table, col, sample=20000):
+    q = f"""
+    SELECT TOP ({sample}) LEFT([{col}],3) AS prefix, COUNT(*) AS n_child
+    FROM [{schema}].[{table}]
+    WHERE [{col}] IS NOT NULL
+    GROUP BY LEFT([{col}],3)
+    """
+    child_pref = pd.read_sql(text(q), engine)
+    return (child_pref.merge(prefix_map, on="prefix", how="left")
+                    .sort_values("n_child", ascending=False))
+
+# Example usage:
+# infer_parent("dbo","LLC_BI_loan__c","Contact__c")  # if that column exists
+```
+
+## Step 3: Validate and label cardinality
+After you infer a likely parent for a column, validate it with a "missing parent" anti-join; this turns your inference into a measurable score (coverage).  
+Then label 1–1 vs 1–many by checking whether the child reference column set is unique (unique index if present; otherwise approximate via distinct counts / ratio tests).
+
+Example validation (single-column case):
+```sql
+-- Candidate: dbo.LLC_BI_loan__c.<SomeContactIdColumn> -> dbo.contact.Id
+SELECT COUNT_BIG(*) AS missing_parent_rows
+FROM dbo.LLC_BI_loan__c l
+WHERE l.<SomeContactIdColumn> IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.contact c
+      WHERE c.Id = l.<SomeContactIdColumn>
+  );
+```
+
+## Practical expectations for your three tables
+`dbo.contact` is a standard object table, so it’s a common *parent* target for relationship fields (e.g., a loan "borrower" lookup).[1]
+`dbo.financial_center__c` and `dbo.LLC_BI_loan__c` are custom objects (suffix `__c`), so look for columns inside `LLC_BI_loan__c` that end in `__c` or `Id` and whose prefixes match the `Id` prefix of `financial_center__c` or `contact`.[3][1]
+If you see a column in `LLC_BI_loan__c` whose prefixes map to more than one parent object, that can indicate a polymorphic relationship field (one column referencing multiple object types).[2][4]
+
+Name the columns you see in `dbo.LLC_BI_loan__c` that end with `Id` or `__c` (a quick `SELECT TOP 0 *` / column list is fine), and I’ll show you how to generate an `edges.csv` with `child_table, child_column, parent_table, coverage, missing_parent_rows, cardinality` ready for Power BI.
+
+Sources
+[1] Field Types | Object Reference for the Salesforce Platform https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/field_types.htm
+[2] Salesforce Entity Key Prefix Decoder https://help.salesforce.com/s/articleView?id=000385203&language=en_US&type=1
+[3] Custom Objects | Object Reference for the Salesforce Platform https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_custom_objects.htm
+[4] Understanding Relationship Fields and Polymorphic Fields https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql_relationships_and_polymorph_keys.htm
+[5] PERSON_ACCOUNT custom fields BEST PRACTICES? : r/salesforce https://www.reddit.com/r/salesforce/comments/xexgok/person_account_custom_fields_best_practices/
+[6] CustomField | Metadata API Developer Guide https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/customfield.htm
+[7] Salesforce __c vs __r Explained | Custom Fields ... https://astreait.com/salesforce-c-vs-r-custom-fields-relationship-queries/
+[8] Salesforce API Name Character - Trailhead https://trailhead.salesforce.com/trailblazer-community/feed/0D54S00000MiYmTSAV
+[9] ArticleType CustomField | Metadata API Developer Guide https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_articletype_customfield.htm
+[10] How can i create a custom object in Salesforce with a '__' in the name? https://stackoverflow.com/questions/71961950/how-can-i-create-a-custom-object-in-salesforce-with-a-in-the-name
+[11] Salesforce LookUp Fields Based on Another Field's Value https://www.marksgroup.net/blog/salesforce-lookup-fields-based-on-another-fields-value-2/
+[12] Custom Metadata Types and Advanced Formula Fields https://help.salesforce.com/s/articleView?id=platform.custommetadatatypes_formula_fields.htm&language=en_US&type=5
+[13] How To Use a Formula Field to Capture a Lookup Field - YouTube https://www.youtube.com/watch?v=z-9D649lsuA
+[14] Naming Conventions for Custom Source Fields in Contract https://help.salesforce.com/s/articleView?id=ind.sf_contracts_naming_conventions_for_custom_source_fields_in_contract.htm&language=en_US&type=5
+[15] CustomObject | Metadata API Developer Guide https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/customobject.htm
+[16] Get value of lookup field | Salesforce Trailblazer Community https://trailhead.salesforce.com/trailblazer-community/feed/0D54V00007T42SfSAJ
+[17] Salesforce-Naming-Conventions.md - GitHub https://github.com/cfpb/salesforce-docs/blob/master/_pages/Salesforce-Naming-Conventions.md

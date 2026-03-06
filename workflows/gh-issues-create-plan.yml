@@ -95,25 +95,27 @@ jobs:
 
       - name: Create plan with opencode
         id: run-opencode-create-plan
-        run: >
-          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs --agent "planner" '${{ env.TICKET_FILE_PATH }}
-            Start by reading the ticket file and all of the comments in it.
-            Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
-            Then, locate the research for the issue in thoughts/shared/research.
-            Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
+        run: |
+          cd ${{ github.event.repository.name }}
+          opencode run --format json --print-logs --agent "planner" "$(cat <<'EOF'
+          ${{ env.TICKET_FILE_PATH }}
+          Start by reading the ticket file and all of the comments in it.
+          Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
+          Then, locate the research for the issue in thoughts/shared/research.
+          Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
 
-            Then proceed to create a plan for the issue based on the information.
+          Then proceed to create a plan for the issue based on the information.
 
-            **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to create a plan based on the information you have been provided with, and then write your plan document.**
+          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to create a plan based on the information you have been provided with, and then write your plan document.**
 
-            If there is already a plan document for this issue and there are comments on the issue, use the comments as instructions for updating the plan document.
+          If there is already a plan document for this issue and there are comments on the issue, use the comments as instructions for updating the plan document.
 
-            When referencing the plan document that you created in thoughts/ to the user once you finish, always provide GitHub markdown-style links:
-              - thoughts/shared/plans/... → [LINK TITLE HERE](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/plans/...)
+          When referencing the plan document that you created in thoughts/ to the user once you finish, always provide GitHub markdown-style links:
+            - thoughts/shared/plans/... → [LINK TITLE HERE](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/plans/...)
 
-            Provide a concise bullet point list of the highlights of the plan as your final output to the user.
-
-            ' 2>&1 | tee OPENCODE_ANSWER.md
+          Provide a concise bullet point list of the highlights of the plan as your final output to the user.
+          EOF
+          )" 2>&1 | tee OPENCODE_ANSWER.md
 
       - name: Sync plan to thoughts
         run: |

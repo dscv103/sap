@@ -137,28 +137,35 @@ jobs:
         id: run-opencode-implement-plan
         env:
           GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
-        run: >
-          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs --agent "planner" '${{ env.TICKET_FILE_PATH }}
-            Start by reading the ticket file and all of the comments in it.
-            Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
-            Then, locate the research and the implementation plan for the ticket in thoughts/shared/research and thoughts/shared/plans.
-            Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
+        run: |
+          cd ${{ github.event.repository.name }}
+          opencode run --format json --print-logs --agent "planner" "$(cat <<'EOF'
+          ${{ env.TICKET_FILE_PATH }}
+          Start by reading the ticket file and all of the comments in it.
+          Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
+          Then, locate the research and the implementation plan for the ticket in thoughts/shared/research and thoughts/shared/plans.
+          Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
 
-            Then proceed to execute the implementation plan for the ticket based on that information.
-            If and only if you cannot find an existing implementation plan for the ticket, then you should exit early and indicate that there is no implementation plan.
+          Then proceed to execute the implementation plan for the ticket based on that information.
+          If and only if you cannot find an existing implementation plan for the ticket, then you should exit early and indicate that there is no implementation plan.
 
-            If there is an existing implementation plan, proceed to execute the implementation plan in all of its phases - **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATIONS ALONG THE WAY**. Just execute the plan and notify the user when you are done.
+          If there is an existing implementation plan, proceed to execute the implementation plan in all of its phases - **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATIONS ALONG THE WAY**. Just execute the plan and notify the user when you are done.
 
-            When referencing any documents in the thoughts/ directory, you should always provide GitHub markdown-style links:
-              - thoughts/shared/plans/... → [LINK TITLE HERE](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/plans/...)
-            ' 2>&1 | tee OPENCODE_ANSWER.md
+          When referencing any documents in the thoughts/ directory, you should always provide GitHub markdown-style links:
+            - thoughts/shared/plans/... → [LINK TITLE HERE](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/plans/...)
+          EOF
+          )" 2>&1 | tee OPENCODE_ANSWER.md
 
       - name: Create commits with opencode
         env:
           GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
-        run:
-          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs "/commit
-          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to creating the commit based on the information you have been provided with.**"
+        run: |
+          cd ${{ github.event.repository.name }}
+          opencode run --format json --print-logs "$(cat <<'EOF'
+          /commit
+          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to creating the commit based on the information you have been provided with.**
+          EOF
+          )"
 
       - name: Pull and merge before push (use opencode to resolve any conflicts)
         env:
@@ -169,11 +176,14 @@ jobs:
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
             git pull origin $branch || {
               if git diff --name-only --diff-filter=U | grep -q .; then
-                opencode run --format json --print-logs "There are merge conflicts in the current branch. Please resolve all merge conflicts by:
+                opencode run --format json --print-logs "$(cat <<'EOF'
+                There are merge conflicts in the current branch. Please resolve all merge conflicts by:
                 1. Reading the conflicted files
                 2. Understanding both changes
                 3. Resolving the conflicts appropriately
-                4. After resolving all conflicts, use the SlashCommand tool to run '/commit' to commit the merge resolution."
+                4. After resolving all conflicts, use the SlashCommand tool to run '/commit' to commit the merge resolution.
+                EOF
+                )"
               else
                 echo "Pull failed but no conflicts detected"; exit 1
               fi
@@ -191,11 +201,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
         run: |
-          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs '/describe_pr
-
+          cd ${{ github.event.repository.name }}
+          opencode run --format json --print-logs "$(cat <<'EOF'
+          /describe_pr
           The changes for this PR have now been pushed to origin with the branch name "${{ steps.retrieve-branch-name.outputs.branch }}".
           Please create a PR for this issue. Include "Closes #${{ matrix.issue_number }}" in the PR body to auto-link the issue.
-          ' 2>&1 | tee OPENCODE_PR.md
+          EOF
+          )" 2>&1 | tee OPENCODE_PR.md
 
       - name: Link the PR to the issue via comment
         env:

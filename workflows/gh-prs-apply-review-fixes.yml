@@ -120,7 +120,8 @@ jobs:
 
       - name: Setup thoughts tool config
         run: |
-          echo '{
+          cat >> ${{ github.event.repository.name }}/.humanlayer.json <<EOF
+          {
             "thoughts": {
               "thoughtsRepo": "${{ github.workspace }}/thoughts",
               "reposDir": "repos",
@@ -128,7 +129,8 @@ jobs:
               "user": "claude",
               "repoMappings": {}
             }
-          }' >> ${{ github.event.repository.name }}/.humanlayer.json
+          }
+          EOF
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -168,9 +170,10 @@ jobs:
         id: run-opencode-review
         env:
           GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
-        run: >
+        run: |
           cd ${{ github.event.repository.name }}${{ inputs.working_subdir != '' && format('/{0}', inputs.working_subdir) || '' }}
-          && opencode run --format json --print-logs '/pr-review-approve
+          opencode run --format json --print-logs "$(cat <<'EOF'
+          /pr-review-approve
           This is PR #${{ matrix.pr_number }}.
 
           Read all open review comments on this PR and apply the requested fixes.
@@ -178,7 +181,8 @@ jobs:
           **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to read the review comments and apply all requested fixes.**
 
           When you are done applying all fixes, use the /commit slash command to commit your changes.
-          ' 2>&1 | tee OPENCODE_REVIEW.md
+          EOF
+          )" 2>&1 | tee OPENCODE_REVIEW.md
 
       - name: Pull and merge before push (use opencode to resolve any conflicts)
         env:
@@ -188,11 +192,14 @@ jobs:
           branch=${{ steps.get-pr-branch.outputs.branch }}
           git pull origin $branch || {
             if git diff --name-only --diff-filter=U | grep -q .; then
-              opencode run --format json --print-logs --agent "planner" "There are merge conflicts in the current branch. Please resolve all merge conflicts by:
+              opencode run --format json --print-logs --agent "planner" "$(cat <<'EOF'
+              There are merge conflicts in the current branch. Please resolve all merge conflicts by:
               1. Reading the conflicted files
               2. Understanding both changes
               3. Resolving the conflicts appropriately
-              4. After resolving all conflicts, use the SlashCommand tool to run '/commit' to commit the merge resolution."
+              4. After resolving all conflicts, use the SlashCommand tool to run '/commit' to commit the merge resolution.
+              EOF
+              )"
             else
               echo "Pull failed but no conflicts detected"; exit 1
             fi

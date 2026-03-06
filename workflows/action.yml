@@ -64,7 +64,8 @@ runs:
     - name: Setup thoughts tool config
       shell: bash
       run: |
-        echo '{
+        cat >> ${{ github.event.repository.name }}/.humanlayer.json <<EOF
+        {
           "thoughts": {
             "thoughtsRepo": "${{ github.workspace }}/thoughts",
             "reposDir": "repos",
@@ -72,7 +73,8 @@ runs:
             "user": "claude",
             "repoMappings": {}
           }
-        }' >> ${{ github.event.repository.name }}/.humanlayer.json
+        }
+        EOF
 
     - name: Setup Node
       uses: actions/setup-node@v4

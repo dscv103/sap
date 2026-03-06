@@ -148,28 +148,31 @@ jobs:
 
       - name: Run research with opencode
         id: run-opencode-research
-        run: >
-          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs --agent "researcher" '${{ env.TICKET_FILE_PATH }}
-            Start by reading the ticket and all of the comments.
-            Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
-            Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
-            Then proceed to research the codebase based on the instructions.
+        run: |
+          cd ${{ github.event.repository.name }}
+          opencode run --format json --print-logs --agent "researcher" "$(cat <<'EOF'
+          ${{ env.TICKET_FILE_PATH }}
+          Start by reading the ticket and all of the comments.
+          Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
+          Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
+          Then proceed to research the codebase based on the instructions.
 
-            **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to the research based on the information you have been provided with, and then write your research document.**
+          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to the research based on the information you have been provided with, and then write your research document.**
 
-            If there is already a research document for this issue and there are comments on the issue, use the comments as instructions for updating the research document.
+          If there is already a research document for this issue and there are comments on the issue, use the comments as instructions for updating the research document.
 
-            CRITICAL: After completing all your research and writing the document, your FINAL output must be EXACTLY in this format (nothing else):
+          CRITICAL: After completing all your research and writing the document, your FINAL output must be EXACTLY in this format (nothing else):
 
-            research completed - [thoughts/shared/YYYY-MM-DD-ISSUE-XXXX-description.md](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/research/YYYY-MM-DD-ISSUE-XXXX-description.md)
+          research completed - [thoughts/shared/YYYY-MM-DD-ISSUE-XXXX-description.md](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/research/YYYY-MM-DD-ISSUE-XXXX-description.md)
 
-            ### open questions
-            1. [First open question from your research document]
-            2. [Second open question from your research document]
-            3. [Continue for all open questions, or write "None at this time" if there are no open questions]
+          ### open questions
+          1. [First open question from your research document]
+          2. [Second open question from your research document]
+          3. [Continue for all open questions, or write "None at this time" if there are no open questions]
 
-            Output ONLY this message as your final response, nothing else. Do not include any other text, explanations, or conversation before or after this format.
-            ' 2>&1 | tee OPENCODE_ANSWER.md
+          Output ONLY this message as your final response, nothing else. Do not include any other text, explanations, or conversation before or after this format.
+          EOF
+          )" 2>&1 | tee OPENCODE_ANSWER.md
 
       - name: Sync research to thoughts
         run: |

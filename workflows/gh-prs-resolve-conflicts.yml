@@ -1,0 +1,225 @@
+name: "GitHub PRs: Resolve Merge Conflicts"
+on:
+  workflow_dispatch:
+    inputs:
+      num_prs:
+        description: "Maximum number of conflicting PRs to process"
+        required: false
+        type: string
+        default: "10"
+      assignee:
+        description: "GitHub username to filter PRs by assignee"
+        required: false
+        type: string
+        default: ""
+      label_in_progress:
+        description: "Label to apply while conflicts are being resolved"
+        required: false
+        type: string
+        default: "in-dev"
+      label_done:
+        description: "Label to apply when conflicts are resolved and pushed"
+        required: false
+        type: string
+        default: "code-review"
+      working_subdir:
+        description: "Subdirectory within the repo to run opencode in (leave empty for root)"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  fetch-conflicting-prs:
+    runs-on: self-hosted
+    outputs:
+      pr_numbers: ${{ steps.fetch-prs.outputs.pr_numbers }}
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Get open PRs with merge conflicts"
+        id: fetch-prs
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          effective_assignee="${{ inputs.assignee || vars.DEFAULT_ASSIGNEE }}"
+          fetch_limit="${{ inputs.num_prs || 10 }}"
+
+          # Fetch open assigned PRs and filter to only those with CONFLICTING mergeable state.
+          # mergeable can be: CONFLICTING, MERGEABLE, or UNKNOWN (not yet computed by GitHub).
+          # We skip UNKNOWN — they will be caught on the next run once GitHub resolves them.
+          pr_numbers=$(
+            gh pr list \
+              --assignee "$effective_assignee" \
+              --limit "$fetch_limit" \
+              --state open \
+              --repo ${{ github.repository }} \
+              --json number,mergeable \
+              --jq '[.[] | select(.mergeable == "CONFLICTING") | .number]'
+          )
+
+          echo "pr_numbers=${pr_numbers}" >> "$GITHUB_OUTPUT"
+
+          count=$(echo "$pr_numbers" | jq 'length')
+          if [ "$count" -eq 0 ]; then
+            echo "::notice title=No Conflicts::No conflicting PRs found for assignee '$effective_assignee'"
+          else
+            echo "::notice title=Conflicting PRs::Found $count PR(s) with merge conflicts: $pr_numbers"
+          fi
+
+  resolve-conflicts:
+    name: Resolve conflicts for PR #${{ matrix.pr_number }}
+    needs: fetch-conflicting-prs
+    runs-on: self-hosted
+    if: ${{ needs.fetch-conflicting-prs.outputs.pr_numbers != '[]' && needs.fetch-conflicting-prs.outputs.pr_numbers != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pr_number: ${{ fromJSON(needs.fetch-conflicting-prs.outputs.pr_numbers) }}
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Configure PATH for self-hosted runner tools
+        shell: bash
+        run: |
+          echo "/home/github-runner/.opencode/bin" >> $GITHUB_PATH
+          echo "/home/github-runner/.bun/bin" >> $GITHUB_PATH
+          echo "/home/github-runner/.local/share/pnpm" >> $GITHUB_PATH
+          node_bin=$(dirname "$(readlink -f "$(command -v node 2>/dev/null || fnm exec --using=default which node 2>/dev/null)")" 2>/dev/null || true)
+          [ -n "$node_bin" ] && echo "$node_bin" >> $GITHUB_PATH || true
+
+      - name: Fetch PR metadata
+        id: pr-meta
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          json=$(
+            gh pr view ${{ matrix.pr_number }} \
+              --repo ${{ github.repository }} \
+              --json headRefName,baseRefName \
+              --jq '{branch: .headRefName, base: .baseRefName}'
+          )
+          branch=$(echo "$json" | jq -r '.branch')
+          base=$(echo "$json" | jq -r '.base')
+          echo "branch=${branch}" >> $GITHUB_OUTPUT
+          echo "base=${base}" >> $GITHUB_OUTPUT
+          echo "PR #${{ matrix.pr_number }}: branch=$branch base=$base"
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr-meta.outputs.branch }}
+          fetch-depth: 0
+          path: ${{ github.event.repository.name }}
+
+      - name: Configure git user
+        run: |
+          git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
+          git config --global user.name "${{ vars.GIT_USER_NAME }}"
+
+      - name: Check for actual merge conflicts
+        id: check-conflicts
+        run: |
+          cd ${{ github.event.repository.name }}
+          git fetch origin ${{ steps.pr-meta.outputs.base }}
+
+          # Attempt a dry-run merge. If it exits 0 there are no conflicts — end cleanly.
+          if git merge --no-commit --no-ff origin/${{ steps.pr-meta.outputs.base }} 2>&1; then
+            git merge --abort 2>/dev/null || true
+            echo "has_conflicts=false" >> $GITHUB_OUTPUT
+            echo "::notice title=No Conflicts::PR #${{ matrix.pr_number }} has no merge conflicts — skipping"
+          else
+            git merge --abort 2>/dev/null || true
+            echo "has_conflicts=true" >> $GITHUB_OUTPUT
+            echo "::notice title=Conflicts Detected::PR #${{ matrix.pr_number }} has merge conflicts — proceeding with opencode"
+          fi
+
+      - name: Update PR label to 'in dev'
+        if: steps.check-conflicts.outputs.has_conflicts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not update label (label may not exist yet)"
+
+      - name: Merge base branch to surface conflicts for opencode
+        if: steps.check-conflicts.outputs.has_conflicts == 'true'
+        run: |
+          cd ${{ github.event.repository.name }}
+          # Run the real merge so conflict markers are present in the working tree
+          # for opencode to read and resolve. Expected to exit non-zero here.
+          git merge origin/${{ steps.pr-meta.outputs.base }} || true
+
+      - name: Resolve conflicts with opencode
+        if: steps.check-conflicts.outputs.has_conflicts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          cd ${{ github.event.repository.name }}${{ inputs.working_subdir != '' && format('/{0}', inputs.working_subdir) || '' }}
+          opencode run --format json --print-logs --agent "planner" "$(cat <<'EOF'
+          This branch has merge conflicts that need to be resolved.
+
+          The base branch origin/${{ steps.pr-meta.outputs.base }} has been merged into this branch,
+          leaving conflict markers (<<<<<<<, =======, >>>>>>>) in the affected files.
+
+          Please resolve all merge conflicts by:
+          1. Finding every file that contains conflict markers (search for "<<<<<<<")
+          2. Reading each conflicted file carefully to understand both sides of the conflict
+          3. Resolving each conflict by choosing the correct code, or combining both changes where appropriate
+          4. Removing all conflict markers from every file
+          5. After resolving all conflicts, use the /commit slash command to commit the resolution
+
+          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to resolve all conflicts and commit.**
+          EOF
+          )" 2>&1 | tee OPENCODE_CONFLICTS.md
+
+      - name: Verify all conflict markers are gone
+        if: steps.check-conflicts.outputs.has_conflicts == 'true'
+        run: |
+          cd ${{ github.event.repository.name }}
+          if grep -rn "^<<<<<<< \|^=======$\|^>>>>>>> " --include="*.go" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.py" --include="*.json" --include="*.yaml" --include="*.yml" --include="*.md" . 2>/dev/null | grep -v "^Binary"; then
+            echo "ERROR: Conflict markers still present after opencode resolution"
+            exit 1
+          fi
+          echo "All conflict markers resolved"
+
+      - name: Push resolved branch
+        if: steps.check-conflicts.outputs.has_conflicts == 'true'
+        run: |
+          cd ${{ github.event.repository.name }}
+          git push origin ${{ steps.pr-meta.outputs.branch }}
+
+      - name: Update PR label to done
+        if: steps.check-conflicts.outputs.has_conflicts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_done || 'code-review' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not update labels"
+
+      - name: In event of failure — reset label
+        if: ${{ failure() && steps.check-conflicts.outputs.has_conflicts == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not reset label"
+
+      - name: In event of cancellation — reset label
+        if: ${{ cancelled() && steps.check-conflicts.outputs.has_conflicts == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not reset label"

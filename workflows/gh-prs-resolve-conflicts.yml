@@ -126,6 +126,14 @@ jobs:
         run: |
           # Set identity locally on both repos after all checkouts are done so that
           # actions/checkout cannot clobber --global config when it runs afterward.
+          if [ -z "${{ vars.GIT_USER_EMAIL }}" ]; then
+            echo "::error title=Missing Variable::vars.GIT_USER_EMAIL is not set. Add it in Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+          if [ -z "${{ vars.GIT_USER_NAME }}" ]; then
+            echo "::error title=Missing Variable::vars.GIT_USER_NAME is not set. Add it in Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
           git -C thoughts config user.email "${{ vars.GIT_USER_EMAIL }}"
           git -C thoughts config user.name "${{ vars.GIT_USER_NAME }}"
           git -C ${{ github.event.repository.name }} config user.email "${{ vars.GIT_USER_EMAIL }}"

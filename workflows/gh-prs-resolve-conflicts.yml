@@ -114,11 +114,6 @@ jobs:
           fetch-depth: 0
           path: ${{ github.event.repository.name }}
 
-      - name: Configure git user
-        run: |
-          git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
-          git config --global user.name "${{ vars.GIT_USER_NAME }}"
-
       - name: Checkout thoughts repository
         uses: actions/checkout@v4
         with:
@@ -126,6 +121,15 @@ jobs:
           ref: main
           ssh-key: ${{ secrets.THOUGHTS_WRITE_DEPLOY_KEY }}
           path: thoughts
+
+      - name: Configure git user
+        run: |
+          # Set identity locally on both repos after all checkouts are done so that
+          # actions/checkout cannot clobber --global config when it runs afterward.
+          git -C thoughts config user.email "${{ vars.GIT_USER_EMAIL }}"
+          git -C thoughts config user.name "${{ vars.GIT_USER_NAME }}"
+          git -C ${{ github.event.repository.name }} config user.email "${{ vars.GIT_USER_EMAIL }}"
+          git -C ${{ github.event.repository.name }} config user.name "${{ vars.GIT_USER_NAME }}"
 
       - name: Setup thoughts tool config
         run: |

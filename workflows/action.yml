@@ -47,12 +47,6 @@ runs:
         fetch-depth: 1
         path: ${{ github.event.repository.name }}
 
-    - name: Configure git user
-      shell: bash
-      run: |
-        git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
-        git config --global user.name "${{ vars.GIT_USER_NAME }}"
-
     - name: Checkout thoughts repository
       uses: actions/checkout@v4
       with:
@@ -60,6 +54,18 @@ runs:
         ref: main
         ssh-key: ${{ inputs.thoughts_deploy_key }}
         path: thoughts
+
+    - name: Configure git user
+      shell: bash
+      run: |
+        # Set identity locally on both repos after all checkouts are done so that
+        # actions/checkout cannot clobber --global config when it runs afterward.
+        # The thoughts repo needs identity for the "Sync to thoughts" commit step.
+        # The main repo needs it for any commits made from the workflow shell.
+        git -C thoughts config user.email "${{ vars.GIT_USER_EMAIL }}"
+        git -C thoughts config user.name "${{ vars.GIT_USER_NAME }}"
+        git -C ${{ github.event.repository.name }} config user.email "${{ vars.GIT_USER_EMAIL }}"
+        git -C ${{ github.event.repository.name }} config user.name "${{ vars.GIT_USER_NAME }}"
 
     - name: Setup thoughts tool config
       shell: bash

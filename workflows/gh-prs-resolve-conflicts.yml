@@ -119,6 +119,54 @@ jobs:
           git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
           git config --global user.name "${{ vars.GIT_USER_NAME }}"
 
+      - name: Checkout thoughts repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.THOUGHTS_REPO }}
+          ref: main
+          ssh-key: ${{ secrets.THOUGHTS_WRITE_DEPLOY_KEY }}
+          path: thoughts
+
+      - name: Setup thoughts tool config
+        run: |
+          cat >> ${{ github.event.repository.name }}/.humanlayer.json <<EOF
+          {
+            "thoughts": {
+              "thoughtsRepo": "${{ github.workspace }}/thoughts",
+              "reposDir": "repos",
+              "globalDir": "global",
+              "user": "claude",
+              "repoMappings": {}
+            }
+          }
+          EOF
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+
+      - name: Initialize thoughts tool
+        run: |
+          # Remove any real thoughts/ directory committed to the repo so humanlayer
+          # thoughts init can replace it with a symlink without prompting interactively.
+          rm -rf ${{ github.event.repository.name }}/thoughts
+          cd ${{ github.event.repository.name }} && echo "y" | humanlayer thoughts init --config-file .humanlayer.json --directory ${{ github.event.repository.name }}
+
+      - name: Verify thoughts setup
+        run: |
+          base="${{ github.event.repository.name }}/thoughts"
+          failed=0
+          for dir in claude shared global; do
+            if [ ! -L "$base/$dir" ]; then
+              echo "ERROR: expected symlink at $base/$dir"
+              failed=1
+            else
+              echo "OK: $base/$dir -> $(readlink -f $base/$dir)"
+            fi
+          done
+          [ $failed -eq 1 ] && ls -la "$base/" && exit 1 || true
+
       - name: Check for actual merge conflicts
         id: check-conflicts
         run: |

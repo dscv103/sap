@@ -1,0 +1,254 @@
+name: "GitHub Issues: Implement Plan for Task"
+on:
+  workflow_dispatch:
+    inputs:
+      num_issues:
+        description: "Maximum number of issues to create an implementation for"
+        required: false
+        type: string
+        default: "10"
+      assignee:
+        description: "GitHub username to filter issues by assignee"
+        required: false
+        type: string
+        default: ""
+      label_ready:
+        description: "Label indicating an issue is ready for implementation"
+        required: false
+        type: string
+        default: "ready-for-dev"
+      label_in_progress:
+        description: "Label to apply when implementation is in progress"
+        required: false
+        type: string
+        default: "in-dev"
+      label_done:
+        description: "Label to apply when implementation is complete"
+        required: false
+        type: string
+        default: "code-review"
+      working_subdir:
+        description: "Subdirectory within the repo to run commands in (leave empty for root)"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  fetch-issues:
+    runs-on: self-hosted
+    outputs:
+      issue_numbers: ${{ steps.fetch-issues.outputs.issue_numbers }}
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Get issues labeled 'ready for dev'"
+        id: fetch-issues
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          effective_assignee="${{ inputs.assignee || vars.DEFAULT_ASSIGNEE }}"
+          issue_numbers=$(
+            gh issue list \
+              --label "${{ inputs.label_ready || 'ready-for-dev' }}" \
+              --assignee "$effective_assignee" \
+              --limit "${{ inputs.num_issues || 10 }}" \
+              --state open \
+              --repo ${{ github.repository }} \
+              --json number \
+              --jq '[.[].number]'
+          )
+          echo "issue_numbers=${issue_numbers}" >> "$GITHUB_OUTPUT"
+          echo "Found issues: ${issue_numbers}"
+
+  implement-plan:
+    name: Implement plan for issue #${{ matrix.issue_number }}
+    needs: fetch-issues
+    runs-on: self-hosted
+    if: ${{ needs.fetch-issues.outputs.issue_numbers != '[]' && needs.fetch-issues.outputs.issue_numbers != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        issue_number: ${{ fromJSON(needs.fetch-issues.outputs.issue_numbers) }}
+    env:
+      TICKET_FILE_PATH: thoughts/shared/tickets/${{ matrix.issue_number }}.md
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Setup issue worker
+        uses: ./.github/actions/issue-worker-setup
+        with:
+          issue_number: ${{ matrix.issue_number }}
+          ticket_file_path: ${{ env.TICKET_FILE_PATH }}
+          github_token: ${{ secrets.COMPOUND_PAT }}
+          thoughts_deploy_key: ${{ secrets.THOUGHTS_WRITE_DEPLOY_KEY }}
+          working_subdir: ${{ inputs.working_subdir }}
+
+      - name: Derive git branch name from issue
+        id: retrieve-branch-name
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          issue_title=$(
+            gh issue view ${{ matrix.issue_number }} \
+              --repo ${{ github.repository }} \
+              --json title \
+              --jq '.title'
+          )
+          slug=$(
+            echo "$issue_title" \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed 's/[^a-z0-9]/-/g' \
+              | tr -s '-' \
+              | sed 's/^-//;s/-$//' \
+              | cut -c1-50
+          )
+          branch="issue-${{ matrix.issue_number }}-${slug}"
+          echo "Derived branch: $branch"
+          echo "branch=${branch}" >> $GITHUB_OUTPUT
+
+      - name: Configure git branch
+        run: |
+          cd ${{ github.event.repository.name }}
+          branch=${{ steps.retrieve-branch-name.outputs.branch }}
+          git fetch origin
+          if git show-ref --verify --quiet refs/heads/$branch; then
+            git checkout $branch && git pull origin $branch
+          elif git show-ref --verify --quiet refs/remotes/origin/$branch; then
+            git checkout -b $branch origin/$branch && git pull origin $branch
+          else
+            git checkout -b $branch
+          fi
+
+      - name: Update issue status to 'in dev'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            --remove-label "${{ inputs.label_ready || 'ready-for-dev' }}" \
+            || echo "Warning: could not update labels (labels may not exist yet)"
+
+      - name: Implement plan with opencode
+        id: run-opencode-implement-plan
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: >
+          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs --agent "planner" '${{ env.TICKET_FILE_PATH }}
+            Start by reading the ticket file and all of the comments in it.
+            Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
+            Then, locate the research and the implementation plan for the ticket in thoughts/shared/research and thoughts/shared/plans.
+            Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
+
+            Then proceed to execute the implementation plan for the ticket based on that information.
+            If and only if you cannot find an existing implementation plan for the ticket, then you should exit early and indicate that there is no implementation plan.
+
+            If there is an existing implementation plan, proceed to execute the implementation plan in all of its phases - **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATIONS ALONG THE WAY**. Just execute the plan and notify the user when you are done.
+
+            When referencing any documents in the thoughts/ directory, you should always provide GitHub markdown-style links:
+              - thoughts/shared/plans/... → [LINK TITLE HERE](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/plans/...)
+            ' 2>&1 | tee OPENCODE_ANSWER.md
+
+      - name: Create commits with opencode
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run:
+          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs "/commit
+          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to creating the commit based on the information you have been provided with.**"
+
+      - name: Pull and merge before push (use opencode to resolve any conflicts)
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          cd ${{ github.event.repository.name }}
+          branch=${{ steps.retrieve-branch-name.outputs.branch }}
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git pull origin $branch || {
+              if git diff --name-only --diff-filter=U | grep -q .; then
+                opencode run --format json --print-logs "There are merge conflicts in the current branch. Please resolve all merge conflicts by:
+                1. Reading the conflicted files
+                2. Understanding both changes
+                3. Resolving the conflicts appropriately
+                4. After resolving all conflicts, use the SlashCommand tool to run '/commit' to commit the merge resolution."
+              else
+                echo "Pull failed but no conflicts detected"; exit 1
+              fi
+            }
+          else
+            echo "Remote branch does not exist yet, skipping pull"
+          fi
+
+      - name: Push branch to origin
+        run: |
+          cd ${{ github.event.repository.name }} && git push --set-upstream origin ${{ steps.retrieve-branch-name.outputs.branch }}
+
+      - name: Create PR with opencode
+        id: run-opencode-create-pr
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs '/describe_pr
+
+          The changes for this PR have now been pushed to origin with the branch name "${{ steps.retrieve-branch-name.outputs.branch }}".
+          Please create a PR for this issue. Include "Closes #${{ matrix.issue_number }}" in the PR body to auto-link the issue.
+          ' 2>&1 | tee OPENCODE_PR.md
+
+      - name: Link the PR to the issue via comment
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          cd ${{ github.event.repository.name }}
+          pr_number="$(gh pr view --json number --jq ".number")"
+          pr_title="$(gh pr view --json title --jq ".title")"
+          pr_url="$(gh pr view --json url --jq ".url")"
+          gh issue comment ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --body "🔗 Implementation PR created: [#${pr_number} — ${pr_title}](${pr_url})"
+
+      - name: Post opencode PR summary as issue comment
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          if [ -s OPENCODE_PR.md ] && [ -n "$(tr -d '[:space:]' < OPENCODE_PR.md)" ]; then
+            gh issue comment ${{ matrix.issue_number }} \
+              --repo ${{ github.repository }} \
+              --body "$(cat OPENCODE_PR.md)"
+          else
+            echo "OPENCODE_PR.md is empty or whitespace-only, skipping comment"
+          fi
+
+      - name: Update issue status to 'code review'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_done || 'code-review' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not update labels"
+
+      - name: In event of failure — reset status
+        if: ${{ failure() }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_ready || 'ready-for-dev' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not reset labels"
+
+      - name: In event of cancellation — reset status
+        if: ${{ cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_ready || 'ready-for-dev' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not reset labels"

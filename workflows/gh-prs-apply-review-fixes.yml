@@ -1,0 +1,235 @@
+name: "GitHub PRs: Apply Review Fixes"
+on:
+  workflow_dispatch:
+    inputs:
+      num_prs:
+        description: "Maximum number of PRs to process"
+        required: false
+        type: string
+        default: "10"
+      assignee:
+        description: "GitHub username to filter PRs by assignee"
+        required: false
+        type: string
+        default: ""
+      label_ready:
+        description: "Label indicating a PR has review comments to address"
+        required: false
+        type: string
+        default: "changes-requested"
+      label_in_progress:
+        description: "Label to apply while review fixes are being applied"
+        required: false
+        type: string
+        default: "in-dev"
+      label_done:
+        description: "Label to apply when fixes are complete and pushed"
+        required: false
+        type: string
+        default: "code-review"
+      working_subdir:
+        description: "Subdirectory within the repo to run opencode in (leave empty for root)"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  fetch-prs:
+    runs-on: self-hosted
+    outputs:
+      pr_numbers: ${{ steps.fetch-prs.outputs.pr_numbers }}
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Get PRs labeled 'changes-requested'"
+        id: fetch-prs
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          effective_assignee="${{ inputs.assignee || vars.DEFAULT_ASSIGNEE }}"
+          pr_numbers=$(
+            gh pr list \
+              --label "${{ inputs.label_ready || 'changes-requested' }}" \
+              --assignee "$effective_assignee" \
+              --limit "${{ inputs.num_prs || 10 }}" \
+              --state open \
+              --repo ${{ github.repository }} \
+              --json number \
+              --jq '[.[].number]'
+          )
+          echo "pr_numbers=${pr_numbers}" >> "$GITHUB_OUTPUT"
+          echo "Found PRs: ${pr_numbers}"
+
+  apply-review-fixes:
+    name: Apply review fixes for PR #${{ matrix.pr_number }}
+    needs: fetch-prs
+    runs-on: self-hosted
+    if: ${{ needs.fetch-prs.outputs.pr_numbers != '[]' && needs.fetch-prs.outputs.pr_numbers != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pr_number: ${{ fromJSON(needs.fetch-prs.outputs.pr_numbers) }}
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Configure PATH for self-hosted runner tools
+        shell: bash
+        run: |
+          echo "/home/github-runner/.opencode/bin" >> $GITHUB_PATH
+          echo "/home/github-runner/.bun/bin" >> $GITHUB_PATH
+          echo "/home/github-runner/.local/share/pnpm" >> $GITHUB_PATH
+          node_bin=$(dirname "$(readlink -f "$(command -v node 2>/dev/null || fnm exec --using=default which node 2>/dev/null)")" 2>/dev/null || true)
+          [ -n "$node_bin" ] && echo "$node_bin" >> $GITHUB_PATH || true
+
+      - name: Fetch PR branch name
+        id: get-pr-branch
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          branch=$(
+            gh pr view ${{ matrix.pr_number }} \
+              --repo ${{ github.repository }} \
+              --json headRefName \
+              --jq '.headRefName'
+          )
+          echo "branch=${branch}" >> $GITHUB_OUTPUT
+          echo "PR #${{ matrix.pr_number }} is on branch: $branch"
+
+      - name: Checkout repository on PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.get-pr-branch.outputs.branch }}
+          fetch-depth: 0
+          path: ${{ github.event.repository.name }}
+
+      - name: Configure git user
+        run: |
+          git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
+          git config --global user.name "${{ vars.GIT_USER_NAME }}"
+
+      - name: Checkout thoughts repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.THOUGHTS_REPO }}
+          ref: main
+          ssh-key: ${{ secrets.THOUGHTS_WRITE_DEPLOY_KEY }}
+          path: thoughts
+
+      - name: Setup thoughts tool config
+        run: |
+          echo '{
+            "thoughts": {
+              "thoughtsRepo": "${{ github.workspace }}/thoughts",
+              "reposDir": "repos",
+              "globalDir": "global",
+              "user": "claude",
+              "repoMappings": {}
+            }
+          }' >> ${{ github.event.repository.name }}/.humanlayer.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+
+      - name: Initialize thoughts tool
+        run: |
+          rm -rf ${{ github.event.repository.name }}/thoughts
+          cd ${{ github.event.repository.name }} && echo "y" | humanlayer thoughts init --config-file .humanlayer.json --directory ${{ github.event.repository.name }}
+
+      - name: Verify thoughts setup
+        run: |
+          base="${{ github.event.repository.name }}/thoughts"
+          failed=0
+          for dir in claude shared global; do
+            if [ ! -L "$base/$dir" ]; then
+              echo "ERROR: expected symlink at $base/$dir"
+              failed=1
+            else
+              echo "OK: $base/$dir -> $(readlink -f $base/$dir)"
+            fi
+          done
+          [ $failed -eq 1 ] && ls -la "$base/" && exit 1 || true
+
+      - name: Update PR label to 'in dev'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            --remove-label "${{ inputs.label_ready || 'changes-requested' }}" \
+            || echo "Warning: could not update labels (labels may not exist yet)"
+
+      - name: Apply review fixes with opencode
+        id: run-opencode-review
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: >
+          cd ${{ github.event.repository.name }}${{ inputs.working_subdir != '' && format('/{0}', inputs.working_subdir) || '' }}
+          && opencode run --format json --print-logs '/pr-review-approve
+          This is PR #${{ matrix.pr_number }}.
+
+          Read all open review comments on this PR and apply the requested fixes.
+
+          **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to read the review comments and apply all requested fixes.**
+
+          When you are done applying all fixes, use the /commit slash command to commit your changes.
+          ' 2>&1 | tee OPENCODE_REVIEW.md
+
+      - name: Pull and merge before push (use opencode to resolve any conflicts)
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          cd ${{ github.event.repository.name }}
+          branch=${{ steps.get-pr-branch.outputs.branch }}
+          git pull origin $branch || {
+            if git diff --name-only --diff-filter=U | grep -q .; then
+              opencode run --format json --print-logs --agent "planner" "There are merge conflicts in the current branch. Please resolve all merge conflicts by:
+              1. Reading the conflicted files
+              2. Understanding both changes
+              3. Resolving the conflicts appropriately
+              4. After resolving all conflicts, use the SlashCommand tool to run '/commit' to commit the merge resolution."
+            else
+              echo "Pull failed but no conflicts detected"; exit 1
+            fi
+          }
+
+      - name: Push fixes to PR branch
+        run: |
+          cd ${{ github.event.repository.name }} && git push origin ${{ steps.get-pr-branch.outputs.branch }}
+
+      - name: Update PR label to 'code review'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_done || 'code-review' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not update labels"
+
+      - name: In event of failure — reset label
+        if: ${{ failure() }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_ready || 'changes-requested' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not reset labels"
+
+      - name: In event of cancellation — reset label
+        if: ${{ cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh pr edit ${{ matrix.pr_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_ready || 'changes-requested' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'in-dev' }}" \
+            || echo "Warning: could not reset labels"

@@ -1,0 +1,164 @@
+name: "GitHub Issues: Create Plan for Task"
+on:
+  workflow_dispatch:
+    inputs:
+      num_issues:
+        description: "Maximum number of issues to create a plan for"
+        required: false
+        type: string
+        default: "10"
+      assignee:
+        description: "GitHub username to filter issues by assignee"
+        required: false
+        type: string
+        default: ""
+      label_ready:
+        description: "Label indicating an issue is ready for planning"
+        required: false
+        type: string
+        default: "ready-for-plan"
+      label_in_progress:
+        description: "Label to apply when plan creation is in progress"
+        required: false
+        type: string
+        default: "plan-in-progress"
+      label_in_review:
+        description: "Label to apply when plan is complete and awaiting review"
+        required: false
+        type: string
+        default: "plan-in-review"
+      working_subdir:
+        description: "Subdirectory within the repo to run commands in (leave empty for root)"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  fetch-issues:
+    runs-on: self-hosted
+    outputs:
+      issue_numbers: ${{ steps.fetch-issues.outputs.issue_numbers }}
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Get issues labeled 'ready for plan'"
+        id: fetch-issues
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          effective_assignee="${{ inputs.assignee || vars.DEFAULT_ASSIGNEE }}"
+          issue_numbers=$(
+            gh issue list \
+              --label "${{ inputs.label_ready || 'ready-for-plan' }}" \
+              --assignee "$effective_assignee" \
+              --limit "${{ inputs.num_issues || 10 }}" \
+              --state open \
+              --repo ${{ github.repository }} \
+              --json number \
+              --jq '[.[].number]'
+            )
+          echo "issue_numbers=${issue_numbers}" >> "$GITHUB_OUTPUT"
+          echo "Found issues: ${issue_numbers}"
+
+  create-plan:
+    name: Create Plan for Issue #${{ matrix.issue_number }}
+    needs: fetch-issues
+    runs-on: self-hosted
+    if: ${{ needs.fetch-issues.outputs.issue_numbers != '[]' && needs.fetch-issues.outputs.issue_numbers != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        issue_number: ${{ fromJSON(needs.fetch-issues.outputs.issue_numbers) }}
+    env:
+      TICKET_FILE_PATH: thoughts/shared/tickets/${{ matrix.issue_number }}.md
+
+    steps:
+      - name: Setup issue worker
+        uses: ./.github/actions/issue-worker-setup
+        with:
+          issue_number: ${{ matrix.issue_number }}
+          ticket_file_path: ${{ env.TICKET_FILE_PATH }}
+          github_token: ${{ secrets.COMPOUND_PAT }}
+          thoughts_deploy_key: ${{ secrets.THOUGHTS_WRITE_DEPLOY_KEY }}
+          working_subdir: ${{ inputs.working_subdir }}
+
+      - name: Update issue status to 'plan in progress'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_in_progress || 'plan-in-progress' }}" \
+            --remove-label "${{ inputs.label_ready || 'ready-for-plan' }}" \
+            || echo "Warning: could not update labels (labels may not exist yet)"
+
+      - name: Create plan with opencode
+        id: run-opencode-create-plan
+        run: >
+          cd ${{ github.event.repository.name }} && opencode run --format json --print-logs --agent "planner" '${{ env.TICKET_FILE_PATH }}
+            Start by reading the ticket file and all of the comments in it.
+            Pay extra attention to the comments - if you (LinearLayer/claude) are mentioned in a comment you should treat that comment as an instruction.
+            Then, locate the research for the issue in thoughts/shared/research.
+            Also check thoughts/shared/images/${{ matrix.issue_number }} for any relevant images and read any you find.
+
+            Then proceed to create a plan for the issue based on the information.
+
+            **DO NOT ASK THE USER FOR DIRECTIONS OR CLARIFICATION. Simply proceed to create a plan based on the information you have been provided with, and then write your plan document.**
+
+            If there is already a plan document for this issue and there are comments on the issue, use the comments as instructions for updating the plan document.
+
+            When referencing the plan document that you created in thoughts/ to the user once you finish, always provide GitHub markdown-style links:
+              - thoughts/shared/plans/... → [LINK TITLE HERE](https://github.com/${{ vars.THOUGHTS_REPO }}/blob/main/repos/${{ github.repository_owner }}/shared/plans/...)
+
+            Provide a concise bullet point list of the highlights of the plan as your final output to the user.
+
+            ' 2>&1 | tee OPENCODE_ANSWER.md
+
+      - name: Sync plan to thoughts
+        run: |
+          cd thoughts
+          git add -A
+          if git diff --cached --quiet; then echo "No changes to commit"; exit 0; fi
+          git commit -m "Sync thoughts from CI for issue #${{ matrix.issue_number }}"
+          git pull --rebase
+          for i in {1..5}; do
+            git push && break || {
+              if [ $i -eq 5 ]; then echo "Failed to push after 5 attempts"; exit 1; fi
+              echo "Push failed, attempt $i/5. Pulling and retrying..."
+              git pull --rebase
+              sleep 2
+            }
+          done
+
+      - name: In event of failure — reset status
+        if: ${{ failure() }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_ready || 'ready-for-plan' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'plan-in-progress' }}" \
+            || echo "Warning: could not reset labels"
+
+      - name: In event of cancellation — reset status
+        if: ${{ cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_ready || 'ready-for-plan' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'plan-in-progress' }}" \
+            || echo "Warning: could not reset labels"
+
+      - name: Update issue status to 'plan in review'
+        env:
+          GH_TOKEN: ${{ secrets.COMPOUND_PAT }}
+        run: |
+          gh issue edit ${{ matrix.issue_number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ inputs.label_in_review || 'plan-in-review' }}" \
+            --remove-label "${{ inputs.label_in_progress || 'plan-in-progress' }}" \
+            || echo "Warning: could not update labels"

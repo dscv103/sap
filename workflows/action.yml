@@ -1,0 +1,173 @@
+name: "Issue Worker Setup"
+description: >
+  Shared setup for all GitHub Issues worker jobs: configures PATH for the
+  self-hosted runner, checks out the code and thoughts repositories, initialises
+  the humanlayer thoughts tool, and fetches issue content + images to disk.
+
+  Required repository variables (Settings → Variables → Actions):
+    THOUGHTS_REPO      e.g. "standard-syntax/thoughts"
+    GIT_USER_EMAIL     e.g. "bot@example.com"
+    GIT_USER_NAME      e.g. "mybot"
+    DEFAULT_ASSIGNEE   e.g. "myusername"
+
+inputs:
+  issue_number:
+    description: "GitHub issue number to fetch"
+    required: true
+  ticket_file_path:
+    description: "Relative path (inside repo/) where the rendered ticket markdown is written, e.g. thoughts/shared/tickets/42.md"
+    required: true
+  github_token:
+    description: "GitHub token for gh CLI calls"
+    required: true
+  thoughts_deploy_key:
+    description: "SSH deploy key with write access to the thoughts repository"
+    required: true
+  working_subdir:
+    description: "Optional subdirectory within repo/ to pass to humanlayer thoughts init (e.g. packages/myapp)"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure PATH for self-hosted runner tools
+      shell: bash
+      run: |
+        echo "/home/github-runner/.opencode/bin" >> $GITHUB_PATH
+        echo "/home/github-runner/.bun/bin" >> $GITHUB_PATH
+        echo "/home/github-runner/.local/share/pnpm" >> $GITHUB_PATH
+        # Resolve fnm-managed node bin path
+        node_bin=$(dirname "$(readlink -f "$(command -v node 2>/dev/null || fnm exec --using=default which node 2>/dev/null)")" 2>/dev/null || true)
+        [ -n "$node_bin" ] && echo "$node_bin" >> $GITHUB_PATH || true
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        path: ${{ github.event.repository.name }}
+
+    - name: Configure git user
+      shell: bash
+      run: |
+        git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
+        git config --global user.name "${{ vars.GIT_USER_NAME }}"
+
+    - name: Checkout thoughts repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ vars.THOUGHTS_REPO }}
+        ref: main
+        ssh-key: ${{ inputs.thoughts_deploy_key }}
+        path: thoughts
+
+    - name: Setup thoughts tool config
+      shell: bash
+      run: |
+        echo '{
+          "thoughts": {
+            "thoughtsRepo": "${{ github.workspace }}/thoughts",
+            "reposDir": "repos",
+            "globalDir": "global",
+            "user": "claude",
+            "repoMappings": {}
+          }
+        }' >> ${{ github.event.repository.name }}/.humanlayer.json
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "25"
+
+    - name: Initialize thoughts tool
+      shell: bash
+      run: |
+        # Remove any real thoughts/ directory committed to the repo so humanlayer
+        # thoughts init can replace it with a symlink without prompting interactively.
+        rm -rf ${{ github.event.repository.name }}/thoughts
+        cd ${{ github.event.repository.name }} && echo "y" | humanlayer thoughts init --config-file .humanlayer.json --directory ${{ github.event.repository.name }}
+
+    - name: Verify thoughts setup
+      shell: bash
+      run: |
+        base="${{ github.event.repository.name }}/thoughts"
+        failed=0
+        for dir in claude shared global; do
+          if [ ! -L "$base/$dir" ]; then
+            echo "ERROR: expected symlink at $base/$dir"
+            failed=1
+          else
+            echo "OK: $base/$dir -> $(readlink -f $base/$dir)"
+          fi
+        done
+        [ $failed -eq 1 ] && ls -la "$base/" && exit 1 || true
+
+    - name: Fetch issue content and write ticket file
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        mkdir -p ${{ github.event.repository.name }}/$(dirname ${{ inputs.ticket_file_path }})
+
+        gh issue view ${{ inputs.issue_number }} \
+          --repo ${{ github.repository }} \
+          --comments \
+          --json number,title,body,labels,assignees,comments \
+          --jq '
+            "# Issue #\(.number): \(.title)\n\n" +
+            "**Labels:** \([.labels[].name] | join(", "))\n" +
+            "**Assignees:** \([.assignees[].login] | join(", "))\n\n" +
+            "## Description\n\n" +
+            .body +
+            "\n\n## Comments\n\n" +
+            ([.comments[] | "### @\(.author.login) (\(.createdAt))\n\n\(.body)\n"] | join("\n---\n\n"))
+          ' >> ${{ github.event.repository.name }}/${{ inputs.ticket_file_path }}
+
+        echo "Ticket file written to ${{ github.event.repository.name }}/${{ inputs.ticket_file_path }}"
+        cat ${{ github.event.repository.name }}/${{ inputs.ticket_file_path }}
+
+    - name: Fetch images from issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        IMAGE_DIR="${{ github.event.repository.name }}/thoughts/shared/images/${{ inputs.issue_number }}"
+        mkdir -p "$IMAGE_DIR"
+
+        ALL_TEXT=$(
+          gh issue view ${{ inputs.issue_number }} \
+            --repo ${{ github.repository }} \
+            --comments \
+            --json body,comments \
+            --jq '.body + "\n" + ([.comments[].body] | join("\n"))'
+        )
+
+        ALL_IMAGE_URLS=$(
+          echo "$ALL_TEXT" \
+            | grep -oP '!\[[^\]]*\]\(\Khttps?://\S+(?=\))' \
+            | sort -u \
+            || true
+        )
+
+        if [ -z "$ALL_IMAGE_URLS" ]; then
+          echo "No images found in issue #${{ inputs.issue_number }}"
+          exit 0
+        fi
+
+        echo "Downloading images from issue #${{ inputs.issue_number }}..."
+        idx=1
+        while IFS= read -r url; do
+          [ -z "$url" ] && continue
+          ext="${url##*.}"
+          case "$ext" in jpg|jpeg|png|gif|webp|svg) ;; *) ext="png" ;; esac
+          outfile="$IMAGE_DIR/image_${idx}.${ext}"
+          echo "Downloading $url -> $outfile"
+          curl -sSL \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/octet-stream" \
+            "$url" -o "$outfile" || echo "Warning: failed to download $url"
+          idx=$((idx + 1))
+        done <<< "$ALL_IMAGE_URLS"
+
+        echo "Images saved to $IMAGE_DIR"
+        ls -la "$IMAGE_DIR" || true

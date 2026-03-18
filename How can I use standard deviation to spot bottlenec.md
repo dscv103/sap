@@ -1,3 +1,11 @@
+github-runner@blazar:~$ npm root -g
+/home/github-runner/.local/share/fnm/node-versions/v25.7.0/installation/lib/node_modules
+github-runner@blazar:~$ readlink -f $(which gsd)
+/home/github-runner/.local/share/fnm/node-versions/v25.7.0/installation/lib/node_modules/gsd-pi/dist/loader.js
+github-runner@blazar:~$ ls $(dirname $(readlink -f $(which gsd)))/../
+dist  LICENSE  node_modules  package.json  packages  pkg  README.md  scripts  src
+github-runner@blazar:~$ 
+
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
 # How can I use standard deviation to spot bottlenecks in application processing duration

@@ -1,0 +1,51 @@
+Subject: Rework Is Driving Closing Delays — Data Summary and Recommendation
+
+Hi [Leader],
+
+Cycle-time data for booked loans from January 1 through March 16 reveals a significant and addressable opportunity: rework originating in earlier stages is consuming a majority of Closing time in both credit card portfolios.
+
+Note: Rework tracking was implemented in late January, so January figures are partial. The rates below are likely understated.
+
+The closing-adjusted figure is total Closing stage duration minus rework time within Closing. All figures are for booked loans only.
+
+Business Banking–Credit Card (126 booked loans, 68 sent for rework — 54%)
+  • Avg Closing: 6.96 days | Closing Adjusted: 3.07 days | Rework: 3.89 days
+  • Rework accounts for 56% of all Business Banking Closing time
+  • A loan that hits rework averages 7.22 days of rework alone
+  • Clean loans (no rework) still average 6.67 days in Closing
+
+The clean loan figure for Business Banking warrants further investigation. Eliminating rework brings the average down to 3.07 days, but loans that never enter rework are still averaging 6.67 days — suggesting rework is not the only driver of extended Closing time for this portfolio. Possible explanations include:
+
+  • Inherent product complexity: BB credit applications typically require entity documentation, beneficial ownership verification, multiple signatories, and more complex closing packages than consumer loans, independent of any rework.
+  • Rework undercounting: With tracking implemented in late January, some activity on loans currently classified as clean may represent unrecorded rework, artificially inflating the clean loan average.
+  • Multi-party coordination: Business closings often involve attorneys, multiple officers, or third parties that extend turnaround regardless of internal process quality.
+  • Queue or staffing dynamics: BB loans may sit in a specialized queue with different capacity constraints than consumer loans.
+  • Sub-product mix: Some loan types within BB may have legitimately longer closing requirements and could be pulling the average up. Segmenting by sub-product may isolate this.
+
+This is a separate but related finding that merits its own review.
+
+Consumer–Credit Card (1,034 booked loans, 164 sent for rework — 16%)
+  • Avg Closing: 1.34 days | Closing Adjusted: 0.47 days | Rework: 0.87 days
+  • Rework accounts for 65% of all Consumer Closing time
+  • 16% of loans are consuming 65% of total Closing time
+  • A rework loan averages 5.48 days — nearly 10x the 0.56-day average for a clean loan
+
+The Consumer finding reframes the problem: this is not a broad performance issue across all loans. A small share of loans, when they hit rework, consume a disproportionate amount of Closing capacity. Clean Consumer loans close in under a day on average, which confirms that the process works well when applications arrive in good order.
+
+Why this matters beyond cycle time:
+
+  Cost. Rework loans consume dramatically more Closing staff time than clean loans — up to 10x more for Consumer. Reducing rework incidence lowers per-application cost without changes to Closing team capacity or structure.
+
+  Customer experience. Customers who reach Closing expect to be nearly done. A 5- to 7-day rework delay at that stage creates friction at exactly the wrong moment.
+
+  Operational risk. Late corrections under time pressure carry higher exposure to errors, inconsistent handling, and compliance gaps than issues caught and resolved earlier in the workflow.
+
+Recommended next steps:
+
+  1. Identify the upstream defect categories most commonly driving Closing rework in both portfolios.
+  2. Investigate why clean Business Banking loans are still averaging 6.67 days in Closing, to determine how much of that is structural versus addressable.
+
+I can put together a deeper breakdown covering both workstreams. Happy to discuss scope and approach.
+
+Thanks,
+[Your Name]

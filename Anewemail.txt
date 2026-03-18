@@ -1,0 +1,90 @@
+Subject: Rework Is Inflating Closing Metrics — Business Case Summary
+
+Hi [Leader],
+
+I want to share a finding that has implications for both how we measure Closing performance and where our best process improvement opportunity sits.
+
+
+THE CORE PROBLEM
+
+When the Closing team receives an application with missing or incorrect information, they return it to the originating party — banker, underwriter, or doc prep — for correction. Closing does not do the rework. They wait. The current system counts every day of that wait against Closing's stage duration, which means Closing's reported cycle times are inflated by delays they did not cause and cannot control.
+
+The closing-adjusted metric removes that wait time. The gap between reported and adjusted is a direct measurement of upstream rework absorbed by Closing on every loan.
+
+
+THE NUMBERS (January 1 – March 16, 2026, booked loans only)
+
+Business Banking – Credit Card (126 loans, 68 sent for rework — 54%)
+  • Reported Closing avg:       6.96 days
+  • Closing Adjusted avg:       3.07 days
+  • Rework wait per loan:       3.90 days
+  • Rework share of reported time: 56%
+  • True overstatement:         +127% — the reported figure is more than twice the adjusted figure
+  • Avg wait per rework loan:   7.22 days
+  • Clean loan avg (no rework): 6.66 days*
+
+Consumer – Credit Card (1,034 loans, 164 sent for rework — 15.9%)
+  • Reported Closing avg:       1.34 days
+  • Closing Adjusted avg:       0.47 days
+  • Rework wait per loan:       0.87 days
+  • Rework share of reported time: 65%
+  • True overstatement:         +185% — the reported figure is nearly three times the adjusted figure
+  • Avg wait per rework loan:   5.48 days
+  • Clean loan avg (no rework): 0.56 days
+
+The Consumer contrast is striking: a rework loan averages 5.48 days of wait time against a 0.56-day clean loan average — nearly 10x. The process works efficiently when applications arrive complete. The problem is entirely concentrated in the 15.9% that require a return.
+
+*Note: BB clean loans still average 6.66 days even without rework, suggesting a separate driver we don't yet fully understand. This is flagged as a parallel investigation.
+
+
+WHAT IS DRIVING REWORK
+
+Analysis of 523 individual return tasks shows the following breakdown (470 classified, 53 pending review):
+
+  Completeness failures (information absent):     416 tasks — 79.5%
+  Accuracy errors (information wrong):             35 tasks —  6.7%
+  Systemic / process routing issues:              19 tasks —  3.6%
+  Not yet classified:                              53 tasks — 10.1%
+  ─────────────────────────────────────────────────────────────
+  Total:                                          523 tasks — 100.0%
+
+Within the 470 classified tasks, 86.2% are preventable at handoff. That floor cannot go lower — classifying the remaining 53 tasks can only raise it.
+
+The single largest category is missing dates by signatures (207 tasks, 39.6%). The descriptions are nearly identical across hundreds of records: "Please add the date by the signature." This is not a knowledge problem. It is the absence of a pre-submission check.
+
+Note: The formal reason code tracking shows 70% of rework loans classified as "Missing Required Data" — a broad catch-all that needs decomposing before we can design an effective checklist. That decomposition is the first recommended action.
+
+
+THE ANNUAL SCALE
+
+Annualizing from the 74-day observation window (January figures are partial and likely understated):
+
+  Projected annual booked loans:         ~5,721 (BB ~621, Consumer ~5,100)
+  Projected annual rework loans:         ~1,144 (~335 BB, ~809 Consumer)
+  Projected annual rework wait days:     ~6,851 total (~2,422 BB, ~4,429 Consumer)
+  Projected monthly return tasks:        ~215 tasks per month
+
+At a conservative improvement scenario — reducing BB rework from 54% to 25% and Consumer from 15.9% to 8% — a pre-Closing completeness gate would recover approximately 3,497 days of Closing throughput capacity annually (~13.4 work-years). These targets reflect the estimated residual rework rate after checklist implementation, accounting for systemic issues not addressable by a handoff check and partial adoption during rollout. They should be revised once pilot data is available.
+
+A precise dollar figure requires the fully-loaded daily cost of Closing capacity from Finance and HR. Implementation cost also needs to be scoped before this moves to investment approval.
+
+
+WHAT NEEDS TO HAPPEN
+
+In priority order:
+
+1. Decompose the "Missing Required Data" reason code (sample 30–50 loans) — this is the highest-leverage diagnostic step and must happen before checklist design is finalized.
+
+2. Analyze return tasks by market and manager to identify rework concentration — rework may be concentrated enough that a targeted pilot outperforms a bank-wide rollout.
+
+3. Shift Closing performance reporting to the adjusted metric — Closing should not be evaluated on time they do not control.
+
+4. Scope and pilot a pre-Closing completeness and accuracy gate — the top four items alone (dated signatures, signed application uploaded, Actimize ID data verified, guarantor profile present) correspond to the majority of return volume.
+
+5. Implement an aging escalation trigger for return tasks open more than 10 business days — several tasks in the data are 30–42 days outstanding with no resolution path.
+
+A full business case document is attached with all supporting data, methodology notes, and known limitations.
+
+Happy to discuss scope, prioritization, or next steps.
+
+[Your Name]

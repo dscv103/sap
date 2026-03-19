@@ -8,16 +8,16 @@ Traceback (most recent call last):
   File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\analyze.py", line 33, in main
     modules.quality.run(lf, output_dir)
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\quality.py", line 78, in run
-    (output_dir / "data_quality.txt").write_text(buf.getvalue())
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "C:\Program Files\Python313\Lib\pathlib\_local.py", line 555, in write_text
-    return PathBase.write_text(self, data, encoding, errors, newline)
-           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Program Files\Python313\Lib\pathlib\_abc.py", line 652, in write_text
-    return f.write(data)
-           ~~~~~~~^^^^^^
-  File "C:\Program Files\Python313\Lib\encodings\cp1252.py", line 19, in encode
-    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\quality.py", line 93, in run
+    content = (output_dir / "data_quality.txt").read_text() + "\n" + buf2.getvalue()
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\Python313\Lib\pathlib\_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\pathlib\_abc.py", line 633, in read_text
+    return f.read()
+           ~~~~~~^^
+  File "C:\Program Files\Python313\Lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
            ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-UnicodeEncodeError: 'charmap' codec can't encode characters in position 45-87: character maps to <undefined>
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 47: character maps to <undefined>

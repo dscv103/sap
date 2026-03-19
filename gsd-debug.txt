@@ -1,23 +1,23 @@
 (custom-visuals) PS C:\Users\a111208\Documents\Power BI Desktop\custom-visuals> uv run analyze ./parquet_output/year=2026/month=02/data.parquet ./reports
+C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\segmentation.py:88: PolarsInefficientMapWarning: 
+Expr.map_elements is significantly slower than the native expressions API.
+Only use if you absolutely CANNOT implement your logic otherwise.
+Replace this expression...
+  - pl.col("recency_days").map_elements(lambda x: ...)
+with this one instead:
+  + 4.0 - pl.col("recency_days")
+
+  .map_elements(lambda x: 4.0 - x, return_dtype=pl.Float64)
 Traceback (most recent call last):
   File "<frozen runpy>", line 198, in _run_module_as_main
   File "<frozen runpy>", line 88, in _run_code
   File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\.venv\Scripts\analyze.exe\__main__.py", line 10, in <module>
     sys.exit(main())
              ~~~~^^
-  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\analyze.py", line 33, in main
-    modules.quality.run(lf, output_dir)
+  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\analyze.py", line 37, in main
+    modules.dropout.run(lf, output_dir)
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\quality.py", line 93, in run
-    content = (output_dir / "data_quality.txt").read_text() + "\n" + buf2.getvalue()
-              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Program Files\Python313\Lib\pathlib\_local.py", line 546, in read_text
-    return PathBase.read_text(self, encoding, errors, newline)
-           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Program Files\Python313\Lib\pathlib\_abc.py", line 633, in read_text
-    return f.read()
-           ~~~~~~^^
-  File "C:\Program Files\Python313\Lib\encodings\cp1252.py", line 23, in decode
-    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
-           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 47: character maps to <undefined>
+  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\dropout.py", line 82, in run
+    f"  {row['gap_days']:.0f} days gap ({row['gap_tier']})"
+        ^^^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to datetime.timedelta.__format__

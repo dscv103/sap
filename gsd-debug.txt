@@ -1,23 +1,18 @@
-(custom-visuals) PS C:\Users\a111208\Documents\Power BI Desktop\custom-visuals> uv run analyze ./parquet_output/year=2026/month=02/data.parquet ./reports
-C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\segmentation.py:88: PolarsInefficientMapWarning: 
-Expr.map_elements is significantly slower than the native expressions API.
-Only use if you absolutely CANNOT implement your logic otherwise.
-Replace this expression...
-  - pl.col("recency_days").map_elements(lambda x: ...)
-with this one instead:
-  + 4.0 - pl.col("recency_days")
-
-  .map_elements(lambda x: 4.0 - x, return_dtype=pl.Float64)
+(custom-visuals) PS C:\Users\a111208\Documents\Power BI Desktop\custom-visuals> uv run analyze --input .\parquet_output\ .\analysis\
 Traceback (most recent call last):
   File "<frozen runpy>", line 198, in _run_module_as_main
   File "<frozen runpy>", line 88, in _run_code
   File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\.venv\Scripts\analyze.exe\__main__.py", line 10, in <module>
     sys.exit(main())
              ~~~~^^
-  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\analyze.py", line 37, in main
-    modules.dropout.run(lf, output_dir)
+  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\analyze.py", line 71, in main
+    modules.quality.run(lf, output_dir)
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\dropout.py", line 82, in run
-    f"  {row['gap_days']:.0f} days gap ({row['gap_tier']})"
-        ^^^^^^^^^^^^^^^^^^^^^
-TypeError: unsupported format string passed to datetime.timedelta.__format__
+  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\modules\quality.py", line 20, in run
+    actual_cols = set(lf.collect_schema().keys())
+                      ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\a111208\Documents\Power BI Desktop\custom-visuals\.venv\Lib\site-packages\polars\lazyframe\frame.py", line 2622, in collect_schema
+    return Schema(self._ldf.collect_schema(), check_dtypes=False)
+                  ~~~~~~~~~~~~~~~~~~~~~~~~^^
+polars.exceptions.InvalidOperationError: directory contained paths with different file extensions: first path: parquet_output/manifest.csv, second path: parquet_output/year=2020/month=01/data.parque
+t. Please use a glob pattern to explicitly specify which files to read (e.g. 'dir/**/*', 'dir/**/*.parquet')                                                                                          

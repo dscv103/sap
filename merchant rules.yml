@@ -121,7 +121,7 @@ rules:
   notes: Penske truck leasing with optional numeric suffix
 - rule_set: PARENT_BRAND
   match_type: regex
-  pattern: ^(UNITED(\.COM| \d)|UA INFLT )
+  pattern: ^(UNITED(\.COM|\s+\d)|UA INFLT )
   label: UNITED AIRLINES
   priority: 100
   enabled: true
@@ -800,11 +800,11 @@ rules:
   notes: Rollup fix
 - rule_set: PARENT_BRAND
   match_type: regex
-  pattern: ^APPLE\.COM/US$
-  label: APPLE COM/BILL
+  pattern: '^APPLE(\.COM|  #| STORE)\b'
+  label: APPLE
   priority: 778
   enabled: true
-  notes: Rollup fix
+  notes: 'Apple — APPLE.COM/BILL, APPLE.COM/US, APPLE STORE  #R019 formats; broadened from ^APPLE\.COM/US$'
 - rule_set: PARENT_BRAND
   match_type: regex
   pattern: ^1ST CB/ SAMS CLUB RENE.*$
@@ -1729,3 +1729,318 @@ rules:
   priority: 1379
   enabled: true
   notes: '[DATA] PADDLE.NET prefix — 48 occurrences; PADDLE.NET* LANG REACT, PADDLE.NET* MACPAW.COM — software billing'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^AGENT FEE\s+\d{13}
+  label: AIRLINE BOOKING FEE
+  priority: 88
+  enabled: true
+  notes: '[DATA] Travel agent booking fee — 734 occurrences; always AGENT FEE + 13-digit IATA ticket number'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^EXPEDIA\b
+  label: EXPEDIA
+  priority: 91
+  enabled: true
+  notes: '[DATA] Expedia — 504 occurrences; EXPEDIA 73352503121667 format (14-digit booking ref)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^KROGER\b
+  label: KROGER
+  priority: 163
+  enabled: true
+  notes: '[DATA] Kroger — 398 occurrences; KROGER #396, KROGER FUEL 1539 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^H-E-B\b
+  label: H-E-B
+  priority: 164
+  enabled: true
+  notes: '[DATA] H-E-B — 257 occurrences; H-E-B #738, H-E-B GAS/CARWASH #063 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^COSTCO\b
+  label: COSTCO
+  priority: 166
+  enabled: true
+  notes: '[DATA] Costco — 249 occurrences; COSTCO WHSE #1670, COSTCO GAS #1228 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WHATABURGER\b
+  label: WHATABURGER
+  priority: 285
+  enabled: true
+  notes: '[DATA] Whataburger — 296 occurrences; WHATABURGER 809    Q26 (Q-code suffix) and WHATABURGER 0197 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WAFFLE HOUSE\b
+  label: WAFFLE HOUSE
+  priority: 287
+  enabled: true
+  notes: '[DATA] Waffle House — 288 occurrences; WAFFLE HOUSE 0180 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DUNKIN\b
+  label: DUNKIN'
+  priority: 289
+  enabled: true
+  notes: '[DATA] Dunkin'' — 263 occurrences; DUNKIN #362547 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CHIPOTLE\b
+  label: CHIPOTLE
+  priority: 291
+  enabled: true
+  notes: '[DATA] Chipotle — 217 occurrences; CHIPOTLE 1361 format (bare numeric store ID, no #)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^LITTLE C(?:AESARS?|EASARS?)\b
+  label: LITTLE CAESARS
+  priority: 293
+  enabled: true
+  notes: '[DATA] Little Caesars — 165 occurrences; LITTLE CAESARS #167 and LITTLE CAESARS 1836 formats; LITTLE CEASARS misspelling (EA transposed) also observed in corpus'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^OLIVE GARDEN\b
+  label: OLIVE GARDEN
+  priority: 297
+  enabled: true
+  notes: '[DATA] Olive Garden — 172 occurrences; OLIVE GARDEN 0021631 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^APPLEBEE'?S?\b
+  label: APPLEBEE'S
+  priority: 299
+  enabled: true
+  notes: '[DATA] Applebee''s — 73 occurrences; APPLEBEES 7721 format (no apostrophe in descriptors)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CHILI'?S\b
+  label: CHILI'S
+  priority: 302
+  enabled: true
+  notes: '[DATA] Chili''s — 184 occurrences; CHILIS WEST BANK and CHILI''S PARKSIDE MALL formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^LONGHORN ST(?:EAK|AK|K)\b
+  label: LONGHORN STEAKHOUSE
+  priority: 303
+  enabled: true
+  notes: '[DATA] Longhorn Steakhouse — 133 occurrences; LONGHORN STK EC 0125541 and LONGHORN STEAK 0125079 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^OUTBACK\b
+  label: OUTBACK STEAKHOUSE
+  priority: 305
+  enabled: true
+  notes: '[DATA] Outback Steakhouse — 86 occurrences; OUTBACK 4451 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^IHOP\b
+  label: IHOP
+  priority: 307
+  enabled: true
+  notes: '[DATA] IHOP — 76 occurrences; IHOP #3042 and IHOP PONCE DE LEON formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^PANDA EXPRESS\b
+  label: PANDA EXPRESS
+  priority: 309
+  enabled: true
+  notes: '[DATA] Panda Express — 165 occurrences; PANDA EXPRESS #2074 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^RAISING CANES?\b
+  label: RAISING CANE'S
+  priority: 311
+  enabled: true
+  notes: '[DATA] Raising Cane''s — 219 occurrences; RAISING CANES 0471 format (no apostrophe)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^RED LOBSTER\b
+  label: RED LOBSTER
+  priority: 313
+  enabled: true
+  notes: '[DATA] Red Lobster — 11 occurrences; RED LOBSTER 6291 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CRACKER BARREL\b
+  label: CRACKER BARREL
+  priority: 315
+  enabled: true
+  notes: '[DATA] Cracker Barrel — 124 occurrences; CRACKER BARREL #749 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TGI FRIDAYS\b
+  label: TGI FRIDAY'S
+  priority: 317
+  enabled: true
+  notes: '[DATA] TGI Friday''s — 8 occurrences; TGI FRIDAYS 2150 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HOOTERS\b
+  label: HOOTERS
+  priority: 319
+  enabled: true
+  notes: '[DATA] Hooters — 25 occurrences; HOOTERS OF HUMBLE and HOOTERS #34 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^JERSEY MIKES?\b
+  label: JERSEY MIKE'S
+  priority: 321
+  enabled: true
+  notes: '[DATA] Jersey Mike''s — 142 occurrences; JERSEY MIKES 13267 format (no apostrophe, no space)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WINGSTOP\b
+  label: WINGSTOP
+  priority: 323
+  enabled: true
+  notes: '[DATA] Wingstop — 104 occurrences; WINGSTOP 1358 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^BOJANGLES\b
+  label: BOJANGLES
+  priority: 325
+  enabled: true
+  notes: '[DATA] Bojangles — 48 occurrences; BOJANGLES 1223 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^IN-N-OUT\b
+  label: IN-N-OUT BURGER
+  priority: 327
+  enabled: true
+  notes: '[DATA] In-N-Out Burger — 39 occurrences; IN-N-OUT PACIFIC BEACH format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^ZAXBY'?S\b
+  label: ZAXBY'S
+  priority: 329
+  enabled: true
+  notes: '[DATA] Zaxby''s — 147 occurrences; ZAXBY''S #21001 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DAIRY QUEEN\b
+  label: DAIRY QUEEN
+  priority: 331
+  enabled: true
+  notes: '[DATA] Dairy Queen — 121 occurrences; DAIRY QUEEN #42098 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^JIMMY JOHNS?[-\s]
+  label: JIMMY JOHN'S
+  priority: 333
+  enabled: true
+  notes: '[DATA] Jimmy John''s — 179 occurrences; JIMMY JOHNS 2645, JIMMY JOHNS-3440, JIMMY JOHNS - 4423 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TEXACO\b
+  label: TEXACO
+  priority: 344
+  enabled: true
+  notes: '[DATA] Texaco — 396 occurrences; TEXACO 0307554 format (bare 7-digit station ID, no #)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^SUNOCO\b
+  label: SUNOCO
+  priority: 346
+  enabled: true
+  notes: '[DATA] Sunoco — 358 occurrences; SUNOCO 0613899402 format (10-digit station code)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^GULF OIL\b
+  label: GULF
+  priority: 348
+  enabled: true
+  notes: '[DATA] Gulf Oil — 48 occurrences; GULF OIL 92064079 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^PHILLIPS 66\b
+  label: PHILLIPS 66
+  priority: 356
+  enabled: true
+  notes: '[DATA] Phillips 66 — 247 occurrences; PHILLIPS 66 - TIGERLAND format (dash-delimited location name)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^SPEEDWAY\b
+  label: SPEEDWAY
+  priority: 368
+  enabled: true
+  notes: '[DATA] Speedway — 182 occurrences; SPEEDWAY 46172 format (5-digit station code)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^7-ELEVEN\b
+  label: 7-ELEVEN
+  priority: 372
+  enabled: true
+  notes: '[DATA] 7-Eleven — 516 occurrences; 7-ELEVEN 42212 format (5-digit store code, no # prefix)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^RACEWAY\b
+  label: RACEWAY
+  priority: 376
+  enabled: true
+  notes: '[DATA] Raceway gas/c-store — 192 occurrences; RACEWAY 7009 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^AUTOZONE\b
+  label: AUTOZONE
+  priority: 423
+  enabled: true
+  notes: '[DATA] AutoZone — 477 occurrences; AUTOZONE #3537 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HARBOR FREIGHT TOOLS
+  label: HARBOR FREIGHT TOOLS
+  priority: 425
+  enabled: true
+  notes: '[DATA] Harbor Freight Tools — 305 occurrences; HARBOR FREIGHT TOOLS3523 (no space) and HARBOR FREIGHT TOOLS 857 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^ENTERPRISE RENT-A-CAR$
+  label: ENTERPRISE RENT-A-CAR
+  priority: 431
+  enabled: true
+  notes: '[DATA] Enterprise Rent-A-Car — 217 occurrences; exact descriptor observed'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^NORTON \*
+  label: NORTON
+  priority: 454
+  enabled: true
+  notes: '[DATA] NortonLifeLock antivirus — 276 occurrences; NORTON *AP1653379791 (AP-/NP-prefixed subscription ID)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^INDEED\b
+  label: INDEED
+  priority: 486
+  enabled: true
+  notes: '[DATA] Indeed job board — 667 occurrences; INDEED USI26-00564599 format (USI/IEI/SGI + job ref)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^NETFLIX\b
+  label: NETFLIX
+  priority: 542
+  enabled: true
+  notes: '[DATA] Netflix — 18 occurrences; NETFLIX.COM format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^ADT SECURITY\*
+  label: ADT SECURITY
+  priority: 572
+  enabled: true
+  notes: '[DATA] ADT home security — 319 occurrences; ADT SECURITY*405513066 format (star-separated account number)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HILTON\b
+  label: HILTON
+  priority: 658
+  enabled: true
+  notes: '[DATA] Hilton brand catch-all — 421 occurrences, 102+ property variants (HILTON GARDEN INN, HILTON HOTELS, HILTON <CITY>); runs before sub-brand rollup rules at 660+'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WDW\b
+  label: WALT DISNEY WORLD
+  priority: 674
+  enabled: true
+  notes: '[DATA] Walt Disney World — 199 occurrences; WDW prefix for all on-property venues and concessions'

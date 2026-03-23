@@ -1,0 +1,1731 @@
+rules:
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(AMAZON MKTPL\*|AMAZON RETA\*|AMAZON PRIME\*|AMAZON\.COM\*|AMAZON DIGI\*|AMAZON DIGIT\*|AMAZON MARK\*|AMZN DIGITAL\*|B2B PRIME\*|PRIME VIDEO \*|KINDLE SVCS|KINDLE UNLTD\*|AUDIBLE\*|ALEXA SKILLS\*|AMAZON/FRD
+    ADJ$|AMAZON DIGITAL$|AMAZON$)
+  label: AMAZON
+  priority: 10
+  enabled: true
+  notes: Amazon ecosystem
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: (\bAMAZON(?:\.COM)?\b|\bAMAZON MKTPL\b|\bPAY\.AMAZON\.COM\b|\bWWW\.AMAZON\.\b|/AMAZON\b)
+  label: AMAZON
+  priority: 11
+  enabled: true
+  notes: Broad Amazon ecosystem + dispute/rebill/domain variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WMT\b
+  label: WALMART
+  priority: 18
+  enabled: true
+  notes: Walmart WMT-prefixed variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WM\.COM$
+  label: WALMART
+  priority: 19
+  enabled: true
+  notes: WM.COM should map to Walmart
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: '^(WAL-MART #|WALMART\.COM|WM SUPERCENTER)'
+  label: WALMART
+  priority: 20
+  enabled: true
+  notes: Walmart variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^WM\b.*\b(LANDFILL|RECYCLERS?|DISPOSAL|RDF|SAN LAN|WM OF CO)\b
+  label: WASTE MANAGEMENT
+  priority: 21
+  enabled: true
+  notes: Waste Management facility/location variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(EBAY O\*|EBAY C |EBAY/FRD ADJ$|EBAY$)
+  label: EBAY
+  priority: 30
+  enabled: true
+  notes: eBay variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^PAYPAL
+  label: PAYPAL
+  priority: 40
+  enabled: true
+  notes: PayPal
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^VENMO
+  label: VENMO
+  priority: 50
+  enabled: true
+  notes: Venmo
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CASH APP\*
+  label: CASH APP
+  priority: 60
+  enabled: true
+  notes: Cash App
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DD \*DOORDASH|PP\*DOORDASH|DOORDASH)
+  label: DOORDASH
+  priority: 70
+  enabled: true
+  notes: DoorDash
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(AMERICAN AIR|AMERICAN AI |AA KIOSK)
+  label: AMERICAN AIRLINES
+  priority: 80
+  enabled: true
+  notes: American Airlines
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DELTA AIR
+  label: DELTA AIRLINES
+  priority: 90
+  enabled: true
+  notes: Delta
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: '^UNTD RNTLS(?: \d+)?$'
+  label: UNITED RENTALS
+  priority: 94
+  enabled: true
+  notes: United Rentals abbreviated form with optional numeric suffix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^UNITED RENTALS\b
+  label: UNITED RENTALS
+  priority: 95
+  enabled: true
+  notes: United Rentals carve-out
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^UNITED DAIRY FARMERS$
+  label: UNITED DAIRY FARMERS
+  priority: 96
+  enabled: true
+  notes: United Dairy Farmers carve-out
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: '^PENSKE TRUCK LSG(?: \d+)?$'
+  label: PENSKE TRK LSG
+  priority: 97
+  enabled: true
+  notes: Penske truck leasing with optional numeric suffix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(UNITED(\.COM| \d)|UA INFLT )
+  label: UNITED AIRLINES
+  priority: 100
+  enabled: true
+  notes: United Airlines safer pattern
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SOUTHWES |SWA\*|SOUTHWEST\.COM)
+  label: SOUTHWEST AIRLINES
+  priority: 110
+  enabled: true
+  notes: Southwest
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^JETBLUE
+  label: JETBLUE
+  priority: 120
+  enabled: true
+  notes: JetBlue
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SPIRIT AIRL|SPIRIT AIRLINES)
+  label: SPIRIT AIRLINES
+  priority: 130
+  enabled: true
+  notes: Spirit
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^FRONTIER AIRLINES
+  label: FRONTIER AIRLINES
+  priority: 140
+  enabled: true
+  notes: Frontier
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^KLM AIRLINE
+  label: KLM
+  priority: 150
+  enabled: true
+  notes: KLM
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(WALGREENS)
+  label: WALGREENS
+  priority: 160
+  enabled: true
+  notes: Walgreens
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(CVS/PHARMACY|CVS PHARMACY|CVS)
+  label: CVS
+  priority: 170
+  enabled: true
+  notes: CVS
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HOMEDEPOT\.COM$
+  label: HOME DEPOT
+  priority: 179
+  enabled: true
+  notes: HomeDepot.com domain variant
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(THE HOME DEPOT|HOME DEPOT)
+  label: HOME DEPOT
+  priority: 180
+  enabled: true
+  notes: Home Depot
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(LOWES|LOWE'S|LOWE S)
+  label: LOWE'S
+  priority: 190
+  enabled: true
+  notes: Lowe's
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(TARGET )
+  label: TARGET
+  priority: 200
+  enabled: true
+  notes: Target
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(BEST BUY|BESTBUYCOM)
+  label: BEST BUY
+  priority: 210
+  enabled: true
+  notes: Best Buy
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(STARBUCKS|HARRAH'S STARBUCKS)
+  label: STARBUCKS
+  priority: 220
+  enabled: true
+  notes: Starbucks
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(CHICK-FIL-A)
+  label: CHICK-FIL-A
+  priority: 230
+  enabled: true
+  notes: Chick-fil-A
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(MCDONALD'S|MCDONALDS )
+  label: MCDONALD'S
+  priority: 240
+  enabled: true
+  notes: McDonalds
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(POPEYES)
+  label: POPEYES
+  priority: 250
+  enabled: true
+  notes: Popeyes
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DOMINO'S|DOMINOS )
+  label: DOMINO'S
+  priority: 260
+  enabled: true
+  notes: Dominos
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(PAPA JOHN'S|PAPA JOHNS)
+  label: PAPA JOHN'S
+  priority: 270
+  enabled: true
+  notes: Papa Johns
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SUBWAY )
+  label: SUBWAY
+  priority: 280
+  enabled: true
+  notes: Subway
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(TACO BELL)
+  label: TACO BELL
+  priority: 290
+  enabled: true
+  notes: Taco Bell
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(BURGER KING)
+  label: BURGER KING
+  priority: 300
+  enabled: true
+  notes: Burger King
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(WENDY'S|WENDYS )
+  label: WENDY'S
+  priority: 310
+  enabled: true
+  notes: Wendys
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(PANERA BREAD)
+  label: PANERA BREAD
+  priority: 320
+  enabled: true
+  notes: Panera
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(FIVE GUYS|5GUYS )
+  label: FIVE GUYS
+  priority: 330
+  enabled: true
+  notes: Five Guys
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SHELL OIL|SHELL )
+  label: SHELL
+  priority: 340
+  enabled: true
+  notes: Shell
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(CHEVRON )
+  label: CHEVRON
+  priority: 350
+  enabled: true
+  notes: Chevron
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(EXXON )
+  label: EXXON
+  priority: 360
+  enabled: true
+  notes: Exxon
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(CIRCLE K|CIRCLEK)
+  label: CIRCLE K
+  priority: 370
+  enabled: true
+  notes: Circle K
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(RACETRAC )
+  label: RACETRAC
+  priority: 380
+  enabled: true
+  notes: RaceTrac
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(WAWA )
+  label: WAWA
+  priority: 390
+  enabled: true
+  notes: Wawa
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(MURPHY )
+  label: MURPHY
+  priority: 400
+  enabled: true
+  notes: Murphy
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(LOVE'S)
+  label: LOVE'S
+  priority: 410
+  enabled: true
+  notes: Loves
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(FEDEX)
+  label: FEDEX
+  priority: 420
+  enabled: true
+  notes: FedEx
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(UPS\*)
+  label: UPS
+  priority: 430
+  enabled: true
+  notes: UPS
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(USPS PO )
+  label: USPS
+  priority: 440
+  enabled: true
+  notes: USPS
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(MICROSOFT|MSFT )
+  label: MICROSOFT
+  priority: 450
+  enabled: true
+  notes: Microsoft
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(GOOGLE |GOOGLE\*)
+  label: GOOGLE
+  priority: 460
+  enabled: true
+  notes: Google
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(CANVA\*)
+  label: CANVA
+  priority: 470
+  enabled: true
+  notes: Canva
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(LINKEDIN)
+  label: LINKEDIN
+  priority: 480
+  enabled: true
+  notes: LinkedIn
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(FACEBK )
+  label: FACEBOOK
+  priority: 490
+  enabled: true
+  notes: Facebook
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SQSP\*|SQUARESPACE)
+  label: SQUARESPACE
+  priority: 500
+  enabled: true
+  notes: Squarespace
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(WIX\.COM)
+  label: WIX
+  priority: 510
+  enabled: true
+  notes: Wix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DROPBOX\*)
+  label: DROPBOX
+  priority: 520
+  enabled: true
+  notes: Dropbox
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DNH\*GODADDY|GODADDY)
+  label: GODADDY
+  priority: 530
+  enabled: true
+  notes: GoDaddy
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SPOTIFY |PP\*SPOTIFY)
+  label: SPOTIFY
+  priority: 540
+  enabled: true
+  notes: Spotify
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(PEACOCK )
+  label: PEACOCK
+  priority: 550
+  enabled: true
+  notes: Peacock
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(ROKU FOR )
+  label: ROKU
+  priority: 560
+  enabled: true
+  notes: Roku
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(AT&T )
+  label: AT&T
+  priority: 570
+  enabled: true
+  notes: AT&T
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(ADOBE\b|AMZ\*ADOBE)
+  label: ADOBE
+  priority: 580
+  enabled: true
+  notes: Adobe
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DICK'?S( SPORTING)? GOODS|DICKS GOODS)
+  label: DICKS SPORTING GOODS
+  priority: 585
+  enabled: true
+  notes: Dick's Sporting Goods variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(WWP\*)?ARROW EXTERMINATORS( I)?$
+  label: ARROW EXTERMINATORS
+  priority: 587
+  enabled: true
+  notes: Arrow Exterminators with optional WWP prefix / trailing I
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(QT( \d+)?( OUTSIDE)?$)
+  label: QT
+  priority: 590
+  enabled: true
+  notes: QT variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(TMOBILE\*)
+  label: T-MOBILE
+  priority: 600
+  enabled: true
+  notes: T-Mobile
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(SAMS CLUB|SAMSCLUB)
+  label: SAMS CLUB
+  priority: 610
+  enabled: true
+  notes: Sams Club
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DOLLAR GENERAL|DOLLAR-GENERAL)
+  label: DOLLAR GENERAL
+  priority: 620
+  enabled: true
+  notes: Dollar General
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(DOLLAR TREE|DOLLARTREE)
+  label: DOLLAR TREE
+  priority: 630
+  enabled: true
+  notes: Dollar Tree
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(FAMILY DOLLAR)
+  label: FAMILY DOLLAR
+  priority: 640
+  enabled: true
+  notes: Family Dollar
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^QVC\*
+  label: QVC
+  priority: 650
+  enabled: true
+  notes: QVC
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^COURTYARD BY MARRIOTT$
+  label: COURTYARD BY MARRIOTT
+  priority: 660
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^STAYBRIDGE SUITES$
+  label: STAYBRIDGE SUITES
+  priority: 661
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TOWNEPLACE SUITES$
+  label: TOWNEPLACE SUITES
+  priority: 662
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^MAINSTAY SUITES$
+  label: MAINSTAY SUITES
+  priority: 663
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^FAIRFIELD INN AND SUIT$
+  label: FAIRFIELD INN AND SUIT
+  priority: 664
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^RESIDENCE INN( BY MARRI.*)?$
+  label: RESIDENCE INN
+  priority: 665
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^MICROTEL INNS AND SUITES$
+  label: MICROTEL INNS AND SUITES
+  priority: 666
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: (^HAMPTON NOLA\b|\bHAMPTON\b.*\bINN(?:S)?\b)
+  label: HAMPTON INNS
+  priority: 667
+  enabled: true
+  notes: Hampton Inn / Hampton Inns / Hampton NOLA variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^MARRIOTT HOTELS$
+  label: MARRIOTT HOTELS
+  priority: 667
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HAMPTON INN AND SUITES$
+  label: HAMPTON INN & SUITES
+  priority: 668
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^AMERICAS BEST VALUE INN?$
+  label: AMERICAS BEST VALUE INN
+  priority: 669
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DOUBLETREE BY HILTON$
+  label: DOUBLETREE BY HILTON
+  priority: 670
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HOME2 SUITES$
+  label: HOME2 SUITES BY HILTON
+  priority: 671
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HORSESHOE HOTEL$
+  label: HORSESHOE HOTEL
+  priority: 672
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^AC HOTELS BY MARRIOTT$
+  label: AC HOTELS BY MARRIOTT
+  priority: 673
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HOLIDAY INN EXPRESS.*$
+  label: HOLIDAY INN EXPRESS
+  priority: 680
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HOMEWOOD SUITES$
+  label: HOMEWOOD SUITES
+  priority: 690
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DOUBLETREE HOTELS$
+  label: DOUBLETREE HOTELS
+  priority: 700
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CANDLEWOOD SUITES$
+  label: CANDLEWOOD SUITES
+  priority: 710
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^SPRINGHILL SUITES$
+  label: SPRINGHILL SUITES
+  priority: 740
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TROPICAL SMOOTHIE CAFE( [A-Z]{2})?$
+  label: TROPICAL SMOOTHIE CAFE
+  priority: 760
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(ACE HARDWARE|ACE HDWE|.* ACE HDWE)$
+  label: ACE HARDWARE
+  priority: 761
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: American Eagle Outfitters
+  label: American Eagle Outfitters
+  priority: 762
+  enabled: true
+  notes: American Eagle Outfitters exact case
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^AMERIGAS PROPANE LP( .*)?$
+  label: AMERIGAS PROPANE LP
+  priority: 763
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CITGO\b.*
+  label: CITGO
+  priority: 764
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^BEALLS FLORIDA( INC)?$
+  label: BEALLS
+  priority: 765
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^UBER\b.*
+  label: UBER
+  priority: 766
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^CRICKET WIRELESS$
+  label: CRICKET WIRELESS
+  priority: 767
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DAIQUIRIS & COMPANY.*$
+  label: DAIQUIRIS & COMPANY
+  priority: 768
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^GREAT AMERICAN COOKIES( -| \d+)?$
+  label: GREAT AMERICAN COOKIES
+  priority: 769
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^GREATAMERICANCOOKIES$
+  label: GREAT AMERICAN COOKIES
+  priority: 770
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TST\* ?FIREHOUSE SUBS.*$
+  label: FIREHOUSE SUBS
+  priority: 771
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DUFRENE BUILDING.*$
+  label: DUFRENE BUILDING
+  priority: 772
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^GOVOLUTION\s*\*?SERVICE FEE$
+  label: GOVOLUTION
+  priority: 773
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^GF\* ?WWW\.SNAPFITNESS\.CO.*$
+  label: SNAP FITNESS
+  priority: 774
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(IC\* ?)?INSTACART(\*[A-Z0-9]+)?$
+  label: INSTACART
+  priority: 775
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^FSP\*AMERICANLUBEFAST$
+  label: AMERICAN LUBE FAST
+  priority: 776
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^DMI\* ?DELL .*$
+  label: DELL
+  priority: 777
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^APPLE\.COM/US$
+  label: APPLE COM/BILL
+  priority: 778
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^1ST CB/ SAMS CLUB RENE.*$
+  label: SAMS CLUB
+  priority: 779
+  enabled: true
+  notes: Rollup fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: INTERIOR EXTERIOR BUILDIN
+  label: INTERIOR EXTERIOR BUILDIN
+  priority: 800
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CALCASIEU URGENT CARE
+  label: CALCASIEU URGENT CARE
+  priority: 801
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TST* NEW ORLEANS ORIGINAL
+  label: NEW ORLEANS ORIGINAL
+  priority: 802
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: LOS PARRILLEROS
+  label: LOS PARRILLEROS
+  priority: 803
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: PAR*LENNY'S GRILL AND SUB
+  label: LENNY'S GRILL AND SUB
+  priority: 804
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: ROSAS CAFE & TORTILLA FTY
+  label: ROSAS CAFE & TORTILLA FTY
+  priority: 805
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TST* BAUMHOWER'S VICTORY
+  label: BAUMHOWER'S VICTORY
+  priority: 806
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TST* PLUCKERS WING BAR -
+  label: PLUCKERS WING BAR
+  priority: 807
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: AMERICAN FACTORY DIRECT
+  label: AMERICAN FACTORY DIRECT
+  priority: 808
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: AMERICAN FAMILY CARE
+  label: AMERICAN FAMILY CARE
+  priority: 809
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: DOUG ASHY BUILDING MATER
+  label: DOUG ASHY BUILDING MATER
+  priority: 810
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: LINDE GAS & EQUIPMENT INC
+  label: LINDE GAS & EQUIPMENT INC
+  priority: 811
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: PY *ATLANTIC SELF STORAGE
+  label: ATLANTIC SELF STORAGE
+  priority: 812
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: PY *JEREMIAHS ITALIAN ICE
+  label: JEREMIAHS ITALIAN ICE
+  priority: 813
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: SOUTHERN CLASSIC CHICK
+  label: SOUTHERN CLASSIC CHICK
+  priority: 814
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TST*NEW ORLEANS HAMBURGE
+  label: NEW ORLEANS HAMBURGE
+  priority: 815
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: FISH WINDOW CLEANING
+  label: FISH WINDOW CLEANING
+  priority: 816
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: LOUISIANA EAR NOSE  T
+  label: LOUISIANA EAR NOSE
+  priority: 817
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: METAIRIE PARK COUNTRY DA
+  label: METAIRIE PARK COUNTRY DA
+  priority: 818
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TST*COPELANDS OF NEW OR
+  label: COPELANDS OF NEW OR
+  priority: 819
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TX Digestive Disease
+  label: TX Digestive Disease
+  priority: 820
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: AMERICAN ASSOCIATION O
+  label: AMERICAN ASSOCIATION O
+  priority: 821
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CLEARWATER EXPRESS WASH
+  label: CLEARWATER EXPRESS WASH
+  priority: 822
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CONNECTOR SPECIALISTS IN
+  label: CONNECTOR SPECIALISTS IN
+  priority: 823
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: COVINGTON HEAVY DUTY PART
+  label: COVINGTON HEAVY DUTY PART
+  priority: 824
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: DISCOUNT ZONE
+  label: DISCOUNT ZONE
+  priority: 825
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: FSP*FINE AIRPORT PARKING
+  label: FINE AIRPORT PARKING
+  priority: 826
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: INTERSTATE BATTERY SYSTEM
+  label: INTERSTATE BATTERY SYSTEM
+  priority: 827
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: PAPPADEAUX SEAFOOD KIT
+  label: PAPPADEAUX SEAFOOD KIT
+  priority: 828
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: PAR*WILLIES GRILL AND ICE
+  label: WILLIES GRILL AND ICE
+  priority: 829
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: REJUVIME MEDICAL
+  label: REJUVIME MEDICAL
+  priority: 830
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: SECURCARE SELF STORAGE
+  label: SECURCARE SELF STORAGE
+  priority: 831
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: SQ *THEO'S NEIGHBORHOOD P
+  label: THEO'S NEIGHBORHOOD P
+  priority: 832
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: THE NEUROMEDICAL CENTER
+  label: THE NEUROMEDICAL CENTER
+  priority: 833
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: THE ROYAL STANDARD INC
+  label: THE ROYAL STANDARD INC
+  priority: 834
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TIA JUANITAS FISH CAM
+  label: TIA JUANITAS FISH CAM
+  priority: 835
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: 76 - DAYBREAK MARKETRKET
+  label: DAYBREAK MARKETRKET
+  priority: 836
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: 76 - HOOD PETROLEUM CO. D
+  label: HOOD PETROLEUM CO.
+  priority: 837
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: BLUEWAVE EXPRESS CAR WAS
+  label: BLUEWAVE EXPRESS CAR WAS
+  priority: 838
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: BURNHAM-MCKINNEY PHARMACY
+  label: BURNHAM-MCKINNEY PHARMACY
+  priority: 839
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: BURWELL MATERIAL HANDLIN
+  label: BURWELL MATERIAL HANDLIN
+  priority: 840
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: BUYGOODS.ME
+  label: BUYGOODS.ME
+  priority: 841
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CARMICHAELS CASHWAY PHARM
+  label: CARMICHAELS CASHWAY PHARM
+  priority: 842
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CITY OF MANDEVILLE
+  label: CITY OF MANDEVILLE
+  priority: 843
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CONSOLIDATED ACE
+  label: CONSOLIDATED ACE
+  priority: 844
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: CROSSROADS BUILDING SUPPL
+  label: CROSSROADS BUILDING SUPPL
+  priority: 845
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: FSP*GREASE MONKEY
+  label: GREASE MONKEY
+  priority: 846
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: IDEMIA TSA PRECHECK
+  label: IDEMIA TSA PRECHECK
+  priority: 847
+  enabled: true
+  notes: Explicit regression fix
+- rule_set: PARENT_BRAND
+  match_type: exact
+  pattern: TX DEPT OF INSURANCE
+  label: TX DEPT OF INSURANCE
+  priority: 860
+  enabled: true
+  notes: Texas insurance department exact
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TX\s*DPS\b|^TXDPS\b
+  label: TX DPS
+  priority: 861
+  enabled: true
+  notes: Texas DPS variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TX ENERGY\b
+  label: TX ENERGY
+  priority: 862
+  enabled: true
+  notes: Texas Energy variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TX SEC OF STATE\b
+  label: TX SOS
+  priority: 863
+  enabled: true
+  notes: Texas Secretary of State
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TX\.GOV\b
+  label: TX GOV
+  priority: 864
+  enabled: true
+  notes: TX.GOV service fee variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TX154\s*-\s*ODESSA\b
+  label: CITY OF ODESSA
+  priority: 865
+  enabled: true
+  notes: Odessa city utility/agency variant
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TXB\s+\d+\b|^TXB$
+  label: TXB
+  priority: 866
+  enabled: true
+  notes: TXB numeric suffix variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TXDMV\b
+  label: TX DMV
+  priority: 867
+  enabled: true
+  notes: Texas DMV variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TXDOT\b
+  label: TX DOT
+  priority: 868
+  enabled: true
+  notes: Texas DOT variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TXEFILE\*[0-9]+-[0-9]+$|^TXEFILE\b
+  label: TX EFILE
+  priority: 869
+  enabled: true
+  notes: Texas efile variants with trailing sequence
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TXEPAY\s*\*?TX EPAY ONLINE\b|^TX EPAY\b|^TXEPAY\b
+  label: TX EPAY
+  priority: 870
+  enabled: true
+  notes: Texas ePay variants
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^KLARNA[* ]
+  label: KLARNA
+  priority: 56
+  enabled: true
+  notes: '[DATA] Klarna BNPL — 98 occurrences; KLARNA*QUINCE, KLARNA WALMART, KLARNA* NEW BALANCE A'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^AIRBNB\b
+  label: AIRBNB
+  priority: 73
+  enabled: true
+  notes: '[DATA] Airbnb — 290 occurrences; AIRBNB * HMMT8YDZPK (HM-prefixed 10-char booking ID)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^VRBO\b
+  label: VRBO
+  priority: 74
+  enabled: true
+  notes: '[DATA] VRBO — 69 occurrences; VRBO HAY87G40 (space-separated HA-prefixed booking ID, no star)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^LYFT\s
+  label: LYFT
+  priority: 75
+  enabled: true
+  notes: '[DATA] Lyft — 221 occurrences; LYFT   *RIDE WED 11AM (3-space separator before ride description)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^HAWAIIAN AI\s
+  label: HAWAIIAN AIRLINES
+  priority: 127
+  enabled: true
+  notes: '[DATA] Hawaiian Airlines — 29 occurrences; HAWAIIAN AI 1732316737538 (IATA ticket number format)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^ALASKA AIR\b
+  label: ALASKA AIRLINES
+  priority: 128
+  enabled: true
+  notes: '[DATA] Alaska Airlines — 88 occurrences; ALASKA AIR  0272131746252 (IATA ticket number format)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^PUBLIX\b
+  label: PUBLIX
+  priority: 165
+  enabled: true
+  notes: '[DATA] Publix — 592 occurrences; PUBLIX #1306 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^SONIC DRIVE IN\b
+  label: SONIC
+  priority: 284
+  enabled: true
+  notes: '[DATA] Sonic Drive-In — 971 occurrences; SONIC DRIVE IN #2885 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^PIZZA HUT\b
+  label: PIZZA HUT
+  priority: 295
+  enabled: true
+  notes: '[DATA] Pizza Hut — 1,024 occurrences; PIZZA HUT 034287 (bare numeric, no # prefix)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^BP#\d+
+  label: BP
+  priority: 342
+  enabled: true
+  notes: '[DATA] BP gas — 605 occurrences; BP#2137900CAMELLIA BP (no space after #, location ID embedded)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^MARATHON\b
+  label: MARATHON
+  priority: 383
+  enabled: true
+  notes: '[DATA] Marathon Petro — 646 occurrences; MARATHON PETRO151209 and MARATHON 240457 formats'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^(OFFICE DEPOT|OFFICEDEPOT)\b
+  label: OFFICE DEPOT
+  priority: 415
+  enabled: true
+  notes: '[DATA] Office Depot — 465 occurrences; OFFICE DEPOT #2193 format'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^TRACTOR SUPPLY\b
+  label: TRACTOR SUPPLY
+  priority: 417
+  enabled: true
+  notes: '[DATA] Tractor Supply Co — 302 occurrences; TRACTOR SUPPLY #2139 and TRACTOR SUPPLY CO #1773'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^O'REILLY\b
+  label: O'REILLY AUTO PARTS
+  priority: 419
+  enabled: true
+  notes: '[DATA] O''Reilly Auto Parts — 537 normalized variants; O''REILLY 6402 format (bare store number)'
+- rule_set: PARENT_BRAND
+  match_type: regex
+  pattern: ^ADVANCE AUTO PARTS\b
+  label: ADVANCE AUTO PARTS
+  priority: 421
+  enabled: true
+  notes: '[DATA] Advance Auto Parts — 978 occurrences; ADVANCE AUTO PARTS #9118 format'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^SQ \*
+  label: ''
+  priority: 1000
+  enabled: true
+  notes: Square prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^TST\*
+  label: ''
+  priority: 1010
+  enabled: true
+  notes: Toast prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^SP '
+  label: ''
+  priority: 1020
+  enabled: true
+  notes: SP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PY \*
+  label: ''
+  priority: 1030
+  enabled: true
+  notes: PY prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PAR\*
+  label: ''
+  priority: 1035
+  enabled: true
+  notes: PAR prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PP\*
+  label: ''
+  priority: 1040
+  enabled: true
+  notes: PP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^DD \*
+  label: ''
+  priority: 1050
+  enabled: true
+  notes: DD prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^DNH\*
+  label: ''
+  priority: 1060
+  enabled: true
+  notes: DNH prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^WF \*
+  label: ''
+  priority: 1070
+  enabled: true
+  notes: WF prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^ACT\*
+  label: ''
+  priority: 1080
+  enabled: true
+  notes: ACT prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^SNS\*
+  label: ''
+  priority: 1090
+  enabled: true
+  notes: SNS prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CTLP\*
+  label: ''
+  priority: 1100
+  enabled: true
+  notes: CTLP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^ABC\*
+  label: ''
+  priority: 1110
+  enabled: true
+  notes: ABC prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^EV\*
+  label: ''
+  priority: 1120
+  enabled: true
+  notes: EV prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^ANC\*
+  label: ''
+  priority: 1130
+  enabled: true
+  notes: ANC prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^NBS\*
+  label: ''
+  priority: 1135
+  enabled: true
+  notes: NBS prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PNM\*
+  label: ''
+  priority: 1137
+  enabled: true
+  notes: PNM prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^BTS\*
+  label: ''
+  priority: 1138
+  enabled: true
+  notes: BTS prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^VSP\*
+  label: ''
+  priority: 1139
+  enabled: true
+  notes: VSP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PDS\*
+  label: ''
+  priority: 1140
+  enabled: true
+  notes: PDS prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CPP\*
+  label: ''
+  priority: 1144
+  enabled: true
+  notes: CPP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PHR\*
+  label: ''
+  priority: 1145
+  enabled: true
+  notes: PHR prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^WWP\*
+  label: ''
+  priority: 1147
+  enabled: true
+  notes: WWP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PAY\*
+  label: ''
+  priority: 1150
+  enabled: true
+  notes: PAY prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PMT\*
+  label: ''
+  priority: 1160
+  enabled: true
+  notes: PMT prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^BKG\*
+  label: ''
+  priority: 1170
+  enabled: true
+  notes: BKG prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^NVN\*
+  label: ''
+  priority: 1180
+  enabled: true
+  notes: NVN prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^GLF\*
+  label: ''
+  priority: 1190
+  enabled: true
+  notes: GLF prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^TET\*
+  label: ''
+  priority: 1200
+  enabled: true
+  notes: TET prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^FS \*
+  label: ''
+  priority: 1210
+  enabled: true
+  notes: FS prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^V\*
+  label: ''
+  priority: 1220
+  enabled: true
+  notes: V prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CBI\*
+  label: ''
+  priority: 1230
+  enabled: true
+  notes: CBI prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PSV\*
+  label: ''
+  priority: 1240
+  enabled: true
+  notes: PSV prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CHR\*
+  label: ''
+  priority: 1250
+  enabled: true
+  notes: CHR prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CRB\*
+  label: ''
+  priority: 1260
+  enabled: true
+  notes: CRB prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^BWY\*
+  label: ''
+  priority: 1270
+  enabled: true
+  notes: BWY prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^MERCH CRED/
+  label: ''
+  priority: 1280
+  enabled: true
+  notes: Merchant credit prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^INT DSP/PAYPAL \*
+  label: ''
+  priority: 1290
+  enabled: true
+  notes: PayPal DSP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^FSP\*
+  label: ''
+  priority: 1300
+  enabled: true
+  notes: FSP prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^IC\* ?
+  label: ''
+  priority: 1310
+  enabled: true
+  notes: IC prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^GF\* ?
+  label: ''
+  priority: 1320
+  enabled: true
+  notes: GF prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^DMI\* ?
+  label: ''
+  priority: 1330
+  enabled: true
+  notes: DMI prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^1ST CB/ '
+  label: ''
+  priority: 1340
+  enabled: true
+  notes: 1ST CB prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^76 - '
+  label: ''
+  priority: 1350
+  enabled: true
+  notes: 76 prefix
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CLR\*
+  label: ''
+  priority: 1355
+  enabled: true
+  notes: '[DATA] CLR prefix — Clover POS actual corpus form (CLVR not observed; CLR* is); CLR*CLUBPILATES, CLR*STRETCHLAB'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^WP\*
+  label: ''
+  priority: 1357
+  enabled: true
+  notes: '[DATA] WP prefix — WooPayments/WooCommerce; 102 occurrences; WP*ACADIANA GELSOFT LL'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^IN \*
+  label: ''
+  priority: 1359
+  enabled: true
+  notes: '[DATA] IN prefix — Invoice Ninja / independent invoicing processor; 1,867 occurrences; IN *COMMAND PRESENCE'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CPI\*
+  label: ''
+  priority: 1361
+  enabled: true
+  notes: '[DATA] CPI prefix — Card Processing Inc; CPI*B&X DEVELOPMENT LLC'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^YSI\*
+  label: ''
+  priority: 1363
+  enabled: true
+  notes: '[DATA] YSI prefix — 70 occurrences; YSI*TELFAIR LOFTS RENTAL, YSI*BUDGET STORAGE CORP'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CEP\*
+  label: ''
+  priority: 1365
+  enabled: true
+  notes: '[DATA] CEP prefix — 28 occurrences; CEP*CANEBRAKE CC, CEP*BAY WAVELAND YC (clubs/venues)'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^VTG\*
+  label: ''
+  priority: 1367
+  enabled: true
+  notes: '[DATA] VTG prefix — 26 occurrences; VTG*MAMMOTH FIVE STAR LOD, VTG*BEACHBALL PROPERTIES'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^SHOPIFY\* '
+  label: ''
+  priority: 1369
+  enabled: true
+  notes: '[DATA] SHOPIFY prefix — 138 occurrences; SHOPIFY* 480380885 (numeric store ID; strip prefix, result is not a merchant name)'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^CARTPANDA\*
+  label: ''
+  priority: 1371
+  enabled: true
+  notes: '[DATA] CARTPANDA prefix — 52 occurrences; CARTPANDA* MEMOGENES23 — e-commerce platform'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^GOFANTIX\* '
+  label: ''
+  priority: 1373
+  enabled: true
+  notes: '[DATA] GOFANTIX prefix — 58 occurrences; GOFANTIX* SOUTH WALTON — event/school ticketing'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^ACTBLUE\* '
+  label: ''
+  priority: 1375
+  enabled: true
+  notes: '[DATA] ACTBLUE prefix — 34 occurrences; ACTBLUE* STOP.REPUBLIC — wraps org/campaign name'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: '^FULLSCRIPT\* '
+  label: ''
+  priority: 1377
+  enabled: true
+  notes: '[DATA] FULLSCRIPT prefix — 39 occurrences; FULLSCRIPT* R707295874 — health supplement platform'
+- rule_set: WRAPPER_PREFIX
+  match_type: regex
+  pattern: ^PADDLE\.NET\*
+  label: ''
+  priority: 1379
+  enabled: true
+  notes: '[DATA] PADDLE.NET prefix — 48 occurrences; PADDLE.NET* LANG REACT, PADDLE.NET* MACPAW.COM — software billing'

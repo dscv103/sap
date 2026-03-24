@@ -1,12 +1,17 @@
+http://msdcpbi01.lighthouse.hhc/reports/powerbi/DART/Card%20Solutions/Card%20Solutions%20Merchant%20Analysis%20-%20Work%20in%20Progress
 
+
+Subject: Introduction to Card Solutions Merchant Analysis Report
 Hi all,
+I wanted to share an early version of the Card Solutions Merchant Analysis Report(http://msdcpbi01.lighthouse.hhc/reports/powerbi/DART/Card%20Solutions/Card%20Solutions%20Merchant%20Analysis%20-%20Work%20in%20Progress) to provide visibility into a new analytical effort underway.
+This report is still in its early stages of development. The foundational work currently centers on normalizing (canonicalizing) merchant names so that merchant activity can be aggregated and analyzed more consistently across transaction data. Because this capability is still maturing, the report should be viewed as directional at this stage, with results expected to improve as the underlying logic and mappings are refined.
+The intent of this initial version is to:
 
-I’m sharing an early version of the Card Solutions Merchant Analysis Report to provide visibility into this new analytical effort.
+Introduce the reporting framework
+Share early examples of merchant-level insight potential
+Identify key data and methodology gaps to address in future iterations
 
-The report is still in its infancy, with current work focused on normalizing (canonicalizing) merchant names to enable more consistent and meaningful merchant-level analysis. As this capability continues to mature, the output should be considered directional and subject to refinement.
-
-This initial version is intended to introduce the framework, highlight the potential value of the analysis, and support discussion around future priorities and enhancements.
-
-I welcome any feedback as the work progresses.
-
-Thanks,  
+At this point, the output is not final and should not yet be used as the sole basis for business decisions. That said, I wanted to circulate it early to align stakeholders on the direction of the work and invite feedback on the most valuable use cases and enhancements.
+As the merchant normalization process matures, we expect the report to become more comprehensive, reliable, and actionable.
+Thanks,
+[Your Name]

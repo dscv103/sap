@@ -1,1 +1,12 @@
 
+Hi all,
+
+I’m sharing an early version of the Card Solutions Merchant Analysis Report to provide visibility into this new analytical effort.
+
+The report is still in its infancy, with current work focused on normalizing (canonicalizing) merchant names to enable more consistent and meaningful merchant-level analysis. As this capability continues to mature, the output should be considered directional and subject to refinement.
+
+This initial version is intended to introduce the framework, highlight the potential value of the analysis, and support discussion around future priorities and enhancements.
+
+I welcome any feedback as the work progresses.
+
+Thanks,  

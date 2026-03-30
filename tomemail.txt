@@ -1,0 +1,6 @@
+Unfortunately, the “Blank” values you are seeing are due to a known data warehouse issue. At this time, those fields only populate correctly Wednesday through Friday.
+Our team is actively working on a permanent fix; however, I’m not able to provide a timeline for resolution at this point.
+In the meantime, I pulled the data manually, and the current value is 24.26%.
+Please let me know if there are any additional categories you’d like me to review manually, and I’d be happy to help.
+Best regards,
+Derek

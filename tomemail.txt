@@ -1,6 +1,6 @@
-Unfortunately, the “Blank” values you are seeing are due to a known data warehouse issue. At this time, those fields only populate correctly Wednesday through Friday.
-Our team is actively working on a permanent fix; however, I’m not able to provide a timeline for resolution at this point.
-In the meantime, I pulled the data manually, and the current value is 24.26%.
-Please let me know if there are any additional categories you’d like me to review manually, and I’d be happy to help.
+The “Blank” values result from a known data warehouse issue — those fields populate correctly only Wednesday through Friday. (Rules 10, 13: active construction; “at this time” cut)
+Our team is working on a permanent fix. I cannot yet give a resolution timeline. (Rules 13, 14: loose compound sentence broken; “actively” cut; positive-to-negative swapped for directness)
+I pulled the data manually. The current value is 24.26%. (Rule 14: short sentences replace loose clause chain; concrete fact foregrounded)
+Let me know if you need other categories reviewed. (Rule 13: “I’d be happy to help” cut — implied)
 Best regards,
-Derek
+Derek​​​​​​​​​​​​​​​​
